@@ -5,9 +5,7 @@ import time
 import sys
 from signal import SIGTERM
 
-from libvirt_monitoring import agent
-from libvirt_monitoring import base
-
+from lan_sync_controller.base import ControlLogger
 
 LOG = logging.getLogger(__name__)
 
@@ -24,8 +22,8 @@ class Daemon:
 
     def __init__(self, pidfile):
         self.pidfile = pidfile
-        sys.stdout = base.AgentLogger(LOG, logging.INFO)
-        sys.stderr = base.AgentLogger(LOG, logging.ERROR)
+        sys.stdout = ControlLogger(LOG, logging.INFO)
+        sys.stderr = ControlLogger(LOG, logging.ERROR)
 
     def daemonize(self):
         """
@@ -74,8 +72,8 @@ class Daemon:
             for line in open("/proc/%d/status" % pid).readlines():
                 print(line)
         except IOError as e:
-            message = 'Unable to open %s pidfile'
-            sys.stderr.write(message % self.pidfile)
+            message = 'Unable to open %s pidfile - %s'
+            sys.stderr.write(message % (self.pidfile, e))
 
     def start(self):
         """
