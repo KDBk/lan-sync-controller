@@ -64,14 +64,14 @@ def scan_udp_port(dst_ip, dst_port, dst_timeout=1):
     elif udp_scan_resp.haslayer(UDP):
         return 'Open'
     elif udp_scan_resp.haslayer(ICMP):
-        if int(udp_scan_resp.getlayer(ICMP).type)==3 and \
-            int(udp_scan_resp.getlayer(ICMP).code)==3:
-            return "Closed"
+        if int(udp_scan_resp.getlayer(ICMP).type) == 3 and \
+                int(udp_scan_resp.getlayer(ICMP).code) == 3:
+            return 'Closed'
         elif int(udp_scan_resp.getlayer(ICMP).type) == 3 and \
-            int(udp_scan_resp.getlayer(ICMP).code) in [1,2,9,10,13]:
-            return "Filtered"
+                int(udp_scan_resp.getlayer(ICMP).code) in [1, 2, 9, 10, 13]:
+            return 'Filtered'
         else:
-            return "CHECK"
+            return 'CHECK'
 
 
 class NeighborsDetector(object):
@@ -90,17 +90,25 @@ class NeighborsDetector(object):
             if netmask <= 0 or netmask == 0xFFFFFFFF:
                 continue
 
-            net=to_CIDR_notation(network, netmask)
+            net = to_CIDR_notation(network, netmask)
 
             if interface != scapy.config.conf.iface:
-                msg=('Skipping %s because scapy currently doesn\'t\
+                msg = ('Skipping %s because scapy currently doesn\'t\
                        support arping on non-primary network \
                        interfaces' % net)
                 LOG.warning(msg)
             if net:
-                result[interface]=scan_and_get_neighbors(net, interface)
+                result[interface] = scan_and_get_neighbors(net, interface)
         return result
 
     def detect_valid_host(self):
         """Detect valid host, which open a given port"""
-        pass
+        neighbors = self.get_all_neighbors()
+        valid_host = []
+        for neigbor in neighbors.values():
+            for _n_ip in neighbor:
+                # If the given host opens port, get it.
+                if 'Open' in scan_udp_port(_n_ip, self.port):
+                    LOG.info('Valid Host was founded: %s' % _n_ip)
+                    valid_host.append(_n_ip)
+        return valid_host
