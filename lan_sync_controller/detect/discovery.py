@@ -97,6 +97,8 @@ class NeighborsDetector(object):
                        support arping on non-primary network \
                        interfaces' % net)
                 LOG.warning(msg)
+                continue
+
             if net:
                 result[interface] = scan_and_get_neighbors(net, interface)
         return result
@@ -105,7 +107,7 @@ class NeighborsDetector(object):
         """Detect valid host, which open a given port"""
         neighbors = self.get_all_neighbors()
         valid_host = []
-        for neigbor in neighbors.values():
+        for neighbor in neighbors.values():
             for _n_ip in neighbor:
                 # If the given host opens port, get it.
                 if 'Open' in scan_udp_port(_n_ip, self.port):
