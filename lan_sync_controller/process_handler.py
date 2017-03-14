@@ -25,11 +25,11 @@ class ProcessHandler(object):
 
         if len(proc_list) == 0:
             msg = ('Unable to find process %s. Wrong process name or this\
-                   process wasn\'t running', self.proc_name)
+                   process wasn\'t running' % self.proc_name)
             LOG.exception(msg)
             return None
         else:
-            msg = ('List of suitable processes: %s', proc_list)
+            msg = ('List of suitable processes: %s' % proc_list)
             LOG.info(msg)
             return proc_list
 
@@ -45,15 +45,15 @@ class ProcessHandler(object):
                 try:
                     result.append(getattr(proc, method))
                 except Exception as e:
-                    LOG.error('Process object %s doesn\'t method %s',
-                              self.proc_name, method)
+                    LOG.error('Process object %s doesn\'t method %s' %
+                              (self.proc_name, method))
                     raise e
             return result
 
     def _get_executable_file(self):
         """Get executable file path, like which command in Linux"""
         exe_file = self.do_method('exe')
-        LOG.info('Find executable file = %s', exe_file)
+        LOG.info('Find executable file = %s' % exe_file)
         return exe_file
 
 
@@ -62,8 +62,8 @@ def start_application(exe_file):
     try:
         subprocess.Popen(exe_file[0], stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE, shell=True)
-        LOG.info('Start application with path = %s successfully!', exe_file)
+        LOG.info('Start application with path = %s successfully!' % exe_file)
     except Exception as e:
-        msg = ('Start application with path = %s failed!', exe_file)
+        msg = ('Start application with path = %s failed!' % exe_file)
         LOG.error(msg)
         raise e
