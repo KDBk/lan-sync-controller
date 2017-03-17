@@ -15,6 +15,7 @@ LOG = logging.getLogger(__name__)
 
 
 def long2net(arg):
+    """Convert long to netmask"""
     if (arg <= 0 or arg >= 0xFFFFFFFF):
         raise ValueError("illegal netmask value", hex(arg))
     return 32 - int(round(math.log(0xFFFFFFFF - arg, 2)))
@@ -32,6 +33,13 @@ def to_CIDR_notation(bytes_network, bytes_netmask):
 
 
 def scan_and_get_neighbors(net, interface, timeout=1):
+    """Get list interfaces, then scan in each network
+    and get available neighbors. Actually, it will  ping`
+    to each ip in network, then wait for reply (received packet)
+    :param net: (string)
+    :param interface: (string)
+    :param timeout(integer)
+    """
     LOG.info('arping %s on %s' % (net, interface))
 
     try:
@@ -50,6 +58,13 @@ def scan_and_get_neighbors(net, interface, timeout=1):
 
 
 def scan_udp_port(dst_ip, dst_port, dst_timeout=1):
+    """Scan UDP port with specific ip address and port
+    This host run code will be source host, define destination
+    host and port that you want to scan.
+    :param dst_ip: (string) destination ip address
+    :param dst_port: (integer) specific port
+    :param dst_timeout: (integer)
+    """
     udp_scan_resp = sr1(IP(dst=dst_ip) / UDP(dport=dst_port),
                         timeout=dst_timeout)
     if str(type(udp_scan_resp)) == "<type 'NoneType'>":
@@ -75,10 +90,12 @@ def scan_udp_port(dst_ip, dst_port, dst_timeout=1):
 
 
 class NeighborsDetector(object):
+
     def __init__(self):
         self.port = SETTINGS['default-port']
 
     def get_all_neighbors(self):
+        """Get All Available Neighbors in LAN"""
         result = {}
         for network, netmask, _, interface, address in \
                 scapy.config.conf.route.routes:
@@ -103,7 +120,7 @@ class NeighborsDetector(object):
                 result[interface] = scan_and_get_neighbors(net, interface)
         return result
 
-    def detect_valid_host(self):
+    def detect_valid_hosts(self):
         """Detect valid host, which open a given port"""
         neighbors = self.get_all_neighbors()
         valid_host = []
