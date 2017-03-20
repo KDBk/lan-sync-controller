@@ -50,6 +50,12 @@ class ProcessHandler(object):
                     raise e
             return result
 
+    def __getattr__(self, method):
+        """Dynamically create a method"""
+        def fn(*args):
+            return self.do_method(method)
+        return fn
+
     def _get_executable_file(self):
         """Get executable file path, like which command in Linux"""
         exe_file = self.do_method('exe')
