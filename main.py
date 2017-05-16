@@ -3,7 +3,7 @@ import os
 import sys
 
 from lan_sync_controller.config_loader import logging_config_loader
-from lan_sync_controller.daemon import LanSyncDaemon
+from lan_sync_controller.daemon import LANSyncDaemon
 
 PROJECT_ROOT = os.path.abspath(os.path.join(
     os.path.dirname(os.path.realpath(__file__)), '../'))
@@ -20,7 +20,7 @@ def main():
     logging_config_loader()
     # Init LanSyncDaemon
     LOG.info('Initiliaze LanSyncDaemon!')
-    daemon = LanSyncDaemon('/tmp/lansync-daemon.pid')
+    daemon = LANSyncDaemon('/tmp/lansync-daemon.pid')
 
     if len(sys.argv) == 2:
         if sys.argv[1] == 'start':
