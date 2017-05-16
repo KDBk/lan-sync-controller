@@ -1,7 +1,7 @@
 import logging
 import time
 
-from lan_sync_controller import BaseDaemon
+from lan_sync_controller.base import BaseDaemon
 from lan_sync_controller.discovery import NeighborsDetector
 
 LOG = logging.getLogger(__name__)
