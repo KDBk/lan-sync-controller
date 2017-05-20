@@ -159,7 +159,6 @@ class NeighborsDetector(object):
                                                                field_values[0],
                                                                field_values[1]))
                     # TODO (kiennt): Verify auth info
-                    valid_host.append((_n_ip, field_values[0],
-                                       field_values[1]))
+                    valid_host.append((field_values[1], _n_ip, self.port))
                     NEIGHBORS.append(_n_ip)
         return valid_host
