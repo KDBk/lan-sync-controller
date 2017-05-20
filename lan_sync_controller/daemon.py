@@ -75,7 +75,7 @@ class PySyncitDaemon(base.BaseDaemon):
 
         # Start the daemon
         self.daemonize()
-        self.run()
+        self.run(servers)
 
     def restart(self, servers):
         """
@@ -84,6 +84,6 @@ class PySyncitDaemon(base.BaseDaemon):
         self.stop()
         self.start(servers)
 
-    def run(self):
+    def run(self, servers):
         while True:
-            pysyncit_monitor.run(self.servers)
+            pysyncit_monitor.run(servers)

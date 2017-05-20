@@ -130,7 +130,8 @@ class NeighborsDetector(object):
         for neighbor in neighbors.values():
             for _n_ip in neighbor:
                 # If the given host opens port, get it.
-                if 'Open' in scan_udp_port(_n_ip, self.port):
+                if 'Open' in scan_udp_port(_n_ip, self.port) \
+                        and not _n_ip.endswith('.1'):
                     LOG.info('Valid Host was founded: %s' % _n_ip)
                     # Check if host in neighbors list
                     if _n_ip in self.NEIGHBORS:
