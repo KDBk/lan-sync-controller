@@ -7,6 +7,7 @@ import socket
 import scapy.config
 import scapy.layers.l2
 import scapy.route
+from easygui import multpasswordbox
 from scapy.all import *
 
 from lan_sync_controller.config_loader import SETTINGS
@@ -91,8 +92,10 @@ def scan_udp_port(dst_ip, dst_port, dst_timeout=1):
 
 class NeighborsDetector(object):
 
+    NEIGHBORS = list()
+
     def __init__(self):
-        self.port = SETTINGS['default-port']
+        self.port = int(SETTINGS['default-port'])
 
     def get_all_neighbors(self):
         """Get All Available Neighbors in LAN"""
@@ -129,5 +132,34 @@ class NeighborsDetector(object):
                 # If the given host opens port, get it.
                 if 'Open' in scan_udp_port(_n_ip, self.port):
                     LOG.info('Valid Host was founded: %s' % _n_ip)
-                    valid_host.append(_n_ip)
+                    # Check if host in neighbors list
+                    if _n_ip in NEIGHBORS:
+                        continue
+                    msg = 'Enter login information of host %s' % _n_ip
+                    title = 'Login'
+                    field_names = ['Username', 'Password']
+                    field_values = list()  # Start with blanks for the values
+                    field_values = multpasswordbox(msg, title, field_names)
+
+                    # make sure that none of the fields was lelf blank
+                    while True:
+                        if not field_values:
+                            break
+                        errmsg = ''
+                        for i in range(len(field_names)):
+                            if field_values[i].strip() == '':
+                                errmsg = errmsg + ('"%s" is a required field.\
+                                                   \n\n' % field_names[i])
+                        if errmsg == '':
+                            break
+                        field_values = multpasswordbox(errmsg, title,
+                                                       field_names,
+                                                       field_values)
+                    LOG.info('Auth info of host %s: %s -%s' % (_n_ip,
+                                                               field_values[0],
+                                                               field_values[1]))
+                    # TODO (kiennt): Verify auth info
+                    valid_host.append((_n_ip, field_values[0],
+                                       field_values[1]))
+                    NEIGHBORS.append(_n_ip)
         return valid_host
