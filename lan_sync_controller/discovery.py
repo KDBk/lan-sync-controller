@@ -133,7 +133,7 @@ class NeighborsDetector(object):
                 if 'Open' in scan_udp_port(_n_ip, self.port):
                     LOG.info('Valid Host was founded: %s' % _n_ip)
                     # Check if host in neighbors list
-                    if _n_ip in NEIGHBORS:
+                    if _n_ip in self.NEIGHBORS:
                         continue
                     msg = 'Enter login information of host %s' % _n_ip
                     title = 'Login'
@@ -160,5 +160,5 @@ class NeighborsDetector(object):
                                                                field_values[1]))
                     # TODO (kiennt): Verify auth info
                     valid_host.append((field_values[1], _n_ip, self.port))
-                    NEIGHBORS.append(_n_ip)
+                    self.NEIGHBORS.append(_n_ip)
         return valid_host
