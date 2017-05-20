@@ -56,10 +56,6 @@ class PySyncitDaemon(base.BaseDaemon):
     A daemon that runs pysyncit in background.
     """
 
-    def __init__(self, pidfile, servers):
-        super(PySyncitDaemon, self).__init__(pidfile)
-        self.servers = servers
-
     def start(self, servers):
         """
         Start the daemon
