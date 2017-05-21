@@ -1,3 +1,4 @@
+import getpass
 import logging
 import sys
 import time
@@ -5,8 +6,9 @@ import time
 from lan_sync_controller import base
 from lan_sync_controller.config_loader import SETTINGS
 from lan_sync_controller.discovery import NeighborsDetector
+from lan_sync_controller.pysyncit.server import Server
 from lan_sync_controller.pysyncit import monitor as pysyncit_monitor
-from lan_sync_controller.process_handler import ProcessHandler
+# from lan_sync_controller.process_handler import ProcessHandler
 
 LOG = logging.getLogger(__name__)
 
@@ -21,33 +23,26 @@ class LANSyncDaemon(base.BaseDaemon):
         super(LANSyncDaemon, self).stop()
         base.kill_process(self.pidfile)
         # Find and kill existed pysyncit process.
-        base.kill_process('/tmp/pysyncit.pid')
+        # base.kill_process('/tmp/pysyncit.pid')
 
     def run(self):
         # Init detector and get all vaild hosts
         # in LAN. Vaild host is the host which open
         # SETTINGS['default-port'].
         _detector = NeighborsDetector()
-        # Find and kill existed pysyncit process.
-        base.kill_process('/tmp/pysyncit.pid')
+        username = getpass.getuser()
+        port = int(SETTINGS['default-port'])
+        watch_dirs = SETTINGS['default-syncdir']
+        servers = list()
+        node = Server(username, port, watch_dirs, servers)
+        node.activate()
 
-        syncdaemon = PySyncitDaemon('/tmp/pysyncit.pid')
-        _handler = ProcessHandler(SETTINGS['default-syncapp'])
-        # For comprasion purpose.
-        _tmp = None
+        # _handler = ProcessHandler(SETTINGS['default-syncapp'])
         while True:
             # List valid hosts
             servers = _detector.detect_valid_hosts()
-            if len(servers) != 0:
-                # Not test yet
-                _handler.do_method('kill')
-                # Restart if detect new host
-                if not _tmp:
-                    syncdaemon.start(servers)
-                elif len(_tmp) != len(servers):
-                    syncdaemon.restart(servers)
-            _tmp = servers
-            time.sleep(50)
+            node.servers = servers
+            time.sleep(10)
 
 
 class PySyncitDaemon(base.BaseDaemon):
