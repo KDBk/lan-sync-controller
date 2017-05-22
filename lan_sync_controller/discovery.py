@@ -1,4 +1,5 @@
 from __future__ import absolute_import, division, print_function
+from datetime import datetime
 import errno
 import logging
 import math
@@ -66,6 +67,7 @@ def scan_udp_port(dst_ip, dst_port, dst_timeout=1):
     :param dst_port: (integer) specific port
     :param dst_timeout: (integer)
     """
+    LOG.info('Start scan_udp_port at %s' % datetime.now())
     udp_scan_resp = sr1(IP(dst=dst_ip) / UDP(dport=dst_port),
                         timeout=dst_timeout)
     if str(type(udp_scan_resp)) == "<type 'NoneType'>":
@@ -78,6 +80,7 @@ def scan_udp_port(dst_ip, dst_port, dst_timeout=1):
                     scan_udp_port(dst_ip, dst_port, dst_timeout)
             return 'Open|Filtered'
     elif udp_scan_resp.haslayer(UDP):
+        LOG.info('End scan_udp_port at %s' % datetime.now())
         return 'Open'
     elif udp_scan_resp.haslayer(ICMP):
         if int(udp_scan_resp.getlayer(ICMP).type) == 3 and \
@@ -99,6 +102,7 @@ class NeighborsDetector(object):
 
     def get_all_neighbors(self):
         """Get All Available Neighbors in LAN"""
+        LOG.info('Start get_all_neighbors at %s' % datetime.now())
         result = {}
         for network, netmask, _, interface, address in \
                 scapy.config.conf.route.routes:
@@ -112,7 +116,7 @@ class NeighborsDetector(object):
 
             net = to_CIDR_notation(network, netmask)
 
-            if interface != scapy.config.conf.iface:
+            if interface != 'docker0' and interface != scapy.config.conf.iface:
                 msg = ('Skipping %s because scapy currently doesn\'t\
                        support arping on non-primary network \
                        interfaces' % net)
@@ -121,6 +125,7 @@ class NeighborsDetector(object):
 
             if net:
                 result[interface] = scan_and_get_neighbors(net, interface)
+        LOG.info('End get_all_neighbors at %s' % datetime.now())
         return result
 
     def detect_valid_hosts(self):
@@ -130,8 +135,9 @@ class NeighborsDetector(object):
         for neighbor in neighbors.values():
             for _n_ip in neighbor:
                 # If the given host opens port, get it.
-                if 'Open' in scan_udp_port(_n_ip, self.port) \
-                        and not _n_ip.endswith('.1'):
+                port_rs = scan_udp_port(_n_ip, self.port)
+                LOG.info('Scan udp port result: %s' % port_rs)
+                if 'Open' in port_rs:
                     LOG.info('Valid Host was founded: %s' % _n_ip)
                     # Check if host in neighbors list
                     if _n_ip in self.NEIGHBORS:
@@ -161,5 +167,6 @@ class NeighborsDetector(object):
                                                                field_values[1]))
                     # TODO (kiennt): Verify auth info
                     valid_host.append((field_values[1], _n_ip, self.port))
+                    # valid_host.append(('1', _n_ip, self.port))
                     self.NEIGHBORS.append(_n_ip)
         return valid_host
