@@ -29,10 +29,10 @@ class LANSyncDaemon(base.BaseDaemon):
         node = Server(username, port, watch_dirs, servers)
         # Have to active before start detect valid host
         # to open port.
-        # node.activate()
+        node.activate()
         # _handler = ProcessHandler(SETTINGS['default-syncapp'])
         while True:
             # List valid hosts
             servers = _detector.detect_valid_hosts()
-            # node.servers = servers
+            node.servers = servers
             time.sleep(10)

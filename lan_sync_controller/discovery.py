@@ -59,46 +59,64 @@ def scan_and_get_neighbors(net, interface, timeout=1):
             raise
 
 
-def scan_udp_port(dst_ip, dst_port, dst_timeout=1):
-    """Scan UDP port with specific ip address and port
+def scan_tcp_port(dst_ip, dst_port, dst_timeout=1):
+    """Scan TCP port with specific ip address and port
     This host run code will be source host, define destination
     host and port that you want to scan.
     :param dst_ip: (string) destination ip address
     :param dst_port: (integer) specific port
     :param dst_timeout: (integer)
     """
-    LOG.info('Start scan_udp_port at %s' % datetime.now())
-    udp_scan_resp = sr1(IP(dst=dst_ip) / UDP(dport=dst_port),
+    LOG.info('Start scan_tcp_port at %s' % datetime.now())
+    tcp_scan_resp = sr1(IP(dst=dst_ip) / TCP(dport=dst_port),
                         timeout=dst_timeout)
-    if str(type(udp_scan_resp)) == "<type 'NoneType'>":
-        retrans = []
-        for count in range(0, 3):
-            retrans.append(sr1(IP(dst=dst_ip) / UDP(dport=dst_port),
-                               timeout=dst_timeout))
-            for item in retrans:
-                if str(type(item)) != "<type 'NoneType'>":
-                    scan_udp_port(dst_ip, dst_port, dst_timeout)
-            return 'Open|Filtered'
-    elif udp_scan_resp.haslayer(UDP):
-        LOG.info('End scan_udp_port at %s' % datetime.now())
-        return 'Open'
-    elif udp_scan_resp.haslayer(ICMP):
-        if int(udp_scan_resp.getlayer(ICMP).type) == 3 and \
+    if not tcp_scan_resp:
+        return 'Filtered'
+    elif tcp_scan_resp.haslayer(TCP):
+        if tcp_scan_resp.getlayer(TCP).flags == 0x12:
+            # send_rst = sr(IP(dst=dst_ip) / TCP(dport=dst_port),
+            #               timeout=dst_timeout)
+            return 'Open'
+    elif tcp_scan_resp.getlayer(TCP).flags == 0x14:
+        return 'Closed'
+    elif tcp_scan_resp.haslayer(ICMP):
+        if int(tcp_scan_resp.getlayer(ICMP).type) == 3 and \
                 int(udp_scan_resp.getlayer(ICMP).code) == 3:
             return 'Closed'
-        elif int(udp_scan_resp.getlayer(ICMP).type) == 3 and \
-                int(udp_scan_resp.getlayer(ICMP).code) in [1, 2, 9, 10, 13]:
+        elif int(tcp_scan_resp.getlayer(ICMP).type) == 3 and \
+                int(tcp_scan_resp.getlayer(ICMP).code) in [1, 2, 9, 10, 13]:
             return 'Filtered'
         else:
             return 'CHECK'
+    # if str(type(udp_scan_resp)) == "<type 'NoneType'>":
+    #     retrans = []
+    #     for count in range(0, 3):
+    #         retrans.append(sr1(IP(dst=dst_ip) / TCP(dport=dst_port),
+    #                            timeout=dst_timeout))
+    #         for item in retrans:
+    #             if str(type(item)) != "<type 'NoneType'>":
+    #                 scan_udp_port(dst_ip, dst_port, dst_timeout)
+    #         return 'Open|Filtered'
+    # elif udp_scan_resp.haslayer(TCP):
+    #     LOG.info('End scan_tcp_port at %s' % datetime.now())
+    #     return 'Open'
+    # elif udp_scan_resp.haslayer(ICMP):
+    #     if int(udp_scan_resp.getlayer(ICMP).type) == 3 and \
+    #             int(udp_scan_resp.getlayer(ICMP).code) == 3:
+    #         return 'Closed'
+    #     elif int(udp_scan_resp.getlayer(ICMP).type) == 3 and \
+    #             int(udp_scan_resp.getlayer(ICMP).code) in [1, 2, 9, 10, 13]:
+    #         return 'Filtered'
+    #     else:
+    #         return 'CHECK'
 
 
 class NeighborsDetector(object):
 
-    NEIGHBORS = list()
-
     def __init__(self):
         self.port = int(SETTINGS['default-port'])
+        self.valid_host = list()
+        self.NEIGHBORS = list()
 
     def get_all_neighbors(self):
         """Get All Available Neighbors in LAN"""
@@ -131,42 +149,41 @@ class NeighborsDetector(object):
     def detect_valid_hosts(self):
         """Detect valid host, which open a given port"""
         neighbors = self.get_all_neighbors()
-        valid_host = []
         for neighbor in neighbors.values():
             for _n_ip in neighbor:
                 # If the given host opens port, get it.
-                port_rs = scan_udp_port(_n_ip, self.port)
-                LOG.info('Scan udp port result: %s' % port_rs)
+                port_rs = scan_tcp_port(_n_ip, self.port)
+                LOG.info('Scan tcp port result: %s' % port_rs)
                 if 'Open' in port_rs:
                     LOG.info('Valid Host was founded: %s' % _n_ip)
-                    # Check if host in neighbors list
-                    if _n_ip in self.NEIGHBORS:
-                        continue
-                    msg = 'Enter login information of host %s' % _n_ip
-                    title = 'Login'
-                    field_names = ['Username', 'Password']
-                    field_values = list()  # Start with blanks for the values
-                    field_values = multpasswordbox(msg, title, field_names)
+                    if _n_ip not in self.NEIGHBORS:
+                        msg = 'Enter login information of host %s' % _n_ip
+                        title = 'Login'
+                        field_names = ['Username', 'Password']
+                        # Start with blanks for the values
+                        field_values = list()
+                        field_values = multpasswordbox(msg, title, field_names)
 
-                    # make sure that none of the fields was lelf blank
-                    while True:
-                        if not field_values:
-                            break
-                        errmsg = ''
-                        for i in range(len(field_names)):
-                            if field_values[i].strip() == '':
-                                errmsg = errmsg + ('"%s" is a required field.\
-                                                   \n\n' % field_names[i])
-                        if errmsg == '':
-                            break
-                        field_values = multpasswordbox(errmsg, title,
-                                                       field_names,
-                                                       field_values)
-                    LOG.info('Auth info of host %s: %s -%s' % (_n_ip,
-                                                               field_values[0],
-                                                               field_values[1]))
-                    # TODO (kiennt): Verify auth info
-                    valid_host.append((field_values[1], _n_ip, self.port))
-                    # valid_host.append(('1', _n_ip, self.port))
-                    self.NEIGHBORS.append(_n_ip)
+                        # make sure that none of the fields was lelf blank
+                        while True:
+                            if not field_values:
+                                break
+                            errmsg = ''
+                            for i in range(len(field_names)):
+                                if field_values[i].strip() == '':
+                                    errmsg = errmsg + ('"%s" is a required field.\
+                                                       \n\n' % field_names[i])
+                            if errmsg == '':
+                                break
+                            field_values = multpasswordbox(errmsg, title,
+                                                           field_names,
+                                                           field_values)
+                        LOG.info('Auth info of host %s: %s -%s' % (_n_ip,
+                                                                   field_values[0],
+                                                                   field_values[1]))
+                        # TODO (kiennt): Verify auth info
+                        self.valid_host.append((field_values[1], _n_ip,
+                                                self.port))
+                        # valid_host.append(('1', _n_ip, self.port))
+                        self.NEIGHBORS.append(_n_ip)
         return valid_host
