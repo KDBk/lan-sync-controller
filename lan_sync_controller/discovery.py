@@ -70,45 +70,49 @@ def scan_tcp_port(dst_ip, dst_port, dst_timeout=1):
     LOG.info('Start scan_tcp_port at %s' % datetime.now())
     tcp_scan_resp = sr1(IP(dst=dst_ip) / TCP(dport=dst_port),
                         timeout=dst_timeout)
-    if not tcp_scan_resp:
-        return 'Filtered'
-    elif tcp_scan_resp.haslayer(TCP):
-        if tcp_scan_resp.getlayer(TCP).flags == 0x12:
-            # send_rst = sr(IP(dst=dst_ip) / TCP(dport=dst_port),
-            #               timeout=dst_timeout)
-            return 'Open'
-    elif tcp_scan_resp.getlayer(TCP).flags == 0x14:
-        return 'Closed'
-    elif tcp_scan_resp.haslayer(ICMP):
-        if int(tcp_scan_resp.getlayer(ICMP).type) == 3 and \
-                int(udp_scan_resp.getlayer(ICMP).code) == 3:
-            return 'Closed'
-        elif int(tcp_scan_resp.getlayer(ICMP).type) == 3 and \
-                int(tcp_scan_resp.getlayer(ICMP).code) in [1, 2, 9, 10, 13]:
-            return 'Filtered'
-        else:
-            return 'CHECK'
-    # if str(type(udp_scan_resp)) == "<type 'NoneType'>":
-    #     retrans = []
-    #     for count in range(0, 3):
-    #         retrans.append(sr1(IP(dst=dst_ip) / TCP(dport=dst_port),
-    #                            timeout=dst_timeout))
-    #         for item in retrans:
-    #             if str(type(item)) != "<type 'NoneType'>":
-    #                 scan_udp_port(dst_ip, dst_port, dst_timeout)
-    #         return 'Open|Filtered'
-    # elif udp_scan_resp.haslayer(TCP):
-    #     LOG.info('End scan_tcp_port at %s' % datetime.now())
-    #     return 'Open'
-    # elif udp_scan_resp.haslayer(ICMP):
-    #     if int(udp_scan_resp.getlayer(ICMP).type) == 3 and \
+    # if not tcp_scan_resp:
+    #     return 'Filtered'
+    # elif tcp_scan_resp.haslayer(TCP):
+    #     if tcp_scan_resp.getlayer(TCP).flags == 0x12:
+    #         # send_rst = sr(IP(dst=dst_ip) / TCP(dport=dst_port),
+    #         #               timeout=dst_timeout)
+    #         return 'Open'
+    # elif tcp_scan_resp.getlayer(TCP).flags == 0x14:
+    #     return 'Closed'
+    # elif tcp_scan_resp.haslayer(ICMP):
+    #     if int(tcp_scan_resp.getlayer(ICMP).type) == 3 and \
     #             int(udp_scan_resp.getlayer(ICMP).code) == 3:
     #         return 'Closed'
-    #     elif int(udp_scan_resp.getlayer(ICMP).type) == 3 and \
-    #             int(udp_scan_resp.getlayer(ICMP).code) in [1, 2, 9, 10, 13]:
+    #     elif int(tcp_scan_resp.getlayer(ICMP).type) == 3 and \
+    #             int(tcp_scan_resp.getlayer(ICMP).code) in [1, 2, 9, 10, 13]:
     #         return 'Filtered'
     #     else:
     #         return 'CHECK'
+    if not tcp_scan_resp:
+        retrans = []
+        for count in range(0, 3):
+            retrans.append(sr1(IP(dst=dst_ip) / TCP(dport=dst_port),
+                               timeout=dst_timeout))
+            for item in retrans:
+                if item:
+                    scan_tcp_port(dst_ip, dst_port, dst_timeout)
+            LOG.info('End scan_tcp_port at %s' % datetime.now())
+            return 'Open|Filtered'
+    elif udp_scan_resp.haslayer(TCP):
+        LOG.info('End scan_tcp_port at %s' % datetime.now())
+        return 'Open'
+    elif tcp_scan_resp.haslayer(ICMP):
+        if int(tcp_scan_resp.getlayer(ICMP).type) == 3 and \
+                int(tcp_scan_resp.getlayer(ICMP).code) == 3:
+            LOG.info('End scan_tcp_port at %s' % datetime.now())
+            return 'Closed'
+        elif int(tcp_scan_resp.getlayer(ICMP).type) == 3 and \
+                int(tcp_scan_resp.getlayer(ICMP).code) in [1, 2, 9, 10, 13]:
+            LOG.info('End scan_tcp_port at %s' % datetime.now())
+            return 'Filtered'
+        else:
+            LOG.info('End scan_tcp_port at %s' % datetime.now())
+            return 'CHECK'
 
 
 class NeighborsDetector(object):
