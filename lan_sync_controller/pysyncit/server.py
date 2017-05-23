@@ -21,6 +21,7 @@ from watchdog.observers import Observer
 import rpc
 from lan_sync_controller.pysyncit.node import Node
 from lan_sync_controller.pysyncit.persistence import FilesPersistentSet
+from lan_sync_controller.constants import DIR_PATH
 
 __author__ = 'dushyant'
 __updater__ = 'daidv'
@@ -75,7 +76,7 @@ class Server(Node):
     def __init__(self, username, port, watch_dirs, servers):
         super(Server, self).__init__(username, port, watch_dirs)
         self.servers = servers
-        self.mfiles = FilesPersistentSet(pkl_filename='node.pkl')  # set() #set of modified files
+        self.mfiles = FilesPersistentSet(pkl_filename='{}/node.pkl' .format(DIR_PATH))  # set() #set of modified files
         self.rfiles = set()  # set of removed filess
         self.pulled_files = set()
         self.server_available = True
