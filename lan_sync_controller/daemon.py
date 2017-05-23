@@ -21,7 +21,7 @@ class LANSyncDaemon(base.BaseDaemon):
         # Init detector and get all vaild hosts
         # in LAN. Vaild host is the host which open
         # SETTINGS['default-port'].
-        _detector = NeighborsDetector()
+        detector = NeighborsDetector()
         username = getpass.getuser()
         port = int(SETTINGS['default-port'])
         watch_dirs = SETTINGS['default-syncdir']
@@ -33,6 +33,6 @@ class LANSyncDaemon(base.BaseDaemon):
         # _handler = ProcessHandler(SETTINGS['default-syncapp'])
         while True:
             # List valid hosts
-            servers = _detector.detect_valid_hosts()
-            node.servers = servers
+            detector.detect_valid_hosts()
+            node.servers = detector.valid_host
             time.sleep(10)
