@@ -47,7 +47,7 @@ def scan_and_get_neighbors(net, interface, timeout=1):
     try:
         ans, unans = scapy.layers.l2.arping(net, iface=interface,
                                             timeout=timeout,
-                                            verbose=True)
+                                            verbose=False)
         neighbors = []
         for s, r in ans.res:
             neighbors.append(r.sprintf('%ARP.psrc%'))
@@ -116,7 +116,7 @@ class NeighborsDetector(object):
 
             net = to_CIDR_notation(network, netmask)
 
-            if interface != 'docker0' and interface != scapy.config.conf.iface:
+            if interface != scapy.config.conf.iface:
                 msg = ('Skipping %s because scapy currently doesn\'t\
                        support arping on non-primary network \
                        interfaces' % net)
