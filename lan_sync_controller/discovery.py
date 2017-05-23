@@ -98,7 +98,7 @@ def scan_tcp_port(dst_ip, dst_port, dst_timeout=1):
                     scan_tcp_port(dst_ip, dst_port, dst_timeout)
             LOG.info('End scan_tcp_port at %s' % datetime.now())
             return 'Open|Filtered'
-    elif udp_scan_resp.haslayer(TCP):
+    elif tcp_scan_resp.haslayer(TCP):
         LOG.info('End scan_tcp_port at %s' % datetime.now())
         return 'Open'
     elif tcp_scan_resp.haslayer(ICMP):
