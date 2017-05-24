@@ -1,8 +1,8 @@
 import getpass
 import logging
 import time
+from threading import Thread
 
-from lan_sync_controller import base
 from lan_sync_controller.config_loader import SETTINGS
 from lan_sync_controller.discovery import NeighborsDetector
 from lan_sync_controller.pysyncit.server import Server
@@ -11,7 +11,7 @@ from lan_sync_controller.pysyncit.server import Server
 LOG = logging.getLogger(__name__)
 
 
-class LANSyncDaemon(base.BaseDaemon):
+class LANSyncDaemon(Thread):
 
     """
     A daemon that runs the app in background

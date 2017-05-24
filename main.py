@@ -20,7 +20,8 @@ def main():
     logging_config_loader()
     # Init LanSyncDaemon
     LOG.info('Initiliaze LanSyncDaemon!')
-    daemon = LANSyncDaemon('/tmp/lansync-daemon.pid')
+    #daemon = LANSyncDaemon('/tmp/lansync-daemon.pid')
+    daemon = LANSyncDaemon()
 
     if len(sys.argv) == 2:
         if sys.argv[1] == 'start':

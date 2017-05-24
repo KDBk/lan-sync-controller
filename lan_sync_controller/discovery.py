@@ -161,32 +161,32 @@ class NeighborsDetector(object):
                 if 'Open' in port_rs:
                     LOG.info('Valid Host was founded: %s' % _n_ip)
                     if _n_ip not in self.NEIGHBORS:
-                        msg = 'Enter login information of host %s' % _n_ip
-                        title = 'Login'
-                        field_names = ['Username', 'Password']
-                        # Start with blanks for the values
-                        field_values = list()
-                        field_values = multpasswordbox(msg, title, field_names)
+                        #msg = 'Enter login information of host %s' % _n_ip
+                        #title = 'Login'
+                        #field_names = ['Username', 'Password']
+                        ## Start with blanks for the values
+                        #field_values = list()
+                        #field_values = multpasswordbox(msg, title, field_names)
 
-                        # make sure that none of the fields was lelf blank
-                        while True:
-                            if not field_values:
-                                break
-                            errmsg = ''
-                            for i in range(len(field_names)):
-                                if field_values[i].strip() == '':
-                                    errmsg = errmsg + ('"%s" is a required field.\
-                                                       \n\n' % field_names[i])
-                            if errmsg == '':
-                                break
-                            field_values = multpasswordbox(errmsg, title,
-                                                           field_names,
-                                                           field_values)
-                        LOG.info('Auth info of host %s: %s -%s' % (_n_ip,
-                                                                   field_values[0],
-                                                                   field_values[1]))
-                        # TODO (kiennt): Verify auth info
-                        self.valid_host.append((field_values[1], _n_ip,
+                        ## make sure that none of the fields was lelf blank
+                        #while True:
+                        #    if not field_values:
+                        #        break
+                        #    errmsg = ''
+                        #    for i in range(len(field_names)):
+                        #        if field_values[i].strip() == '':
+                        #            errmsg = errmsg + ('"%s" is a required field.\
+                        #                               \n\n' % field_names[i])
+                        #    if errmsg == '':
+                        #        break
+                        #    field_values = multpasswordbox(errmsg, title,
+                        #                                   field_names,
+                        #                                   field_values)
+                        #LOG.info('Auth info of host %s: %s -%s' % (_n_ip,
+                        #                                           field_values[0],
+                        #                                           field_values[1]))
+                        ## TODO (kiennt): Verify auth info
+                        self.valid_host.append(('1', _n_ip,
                                                 self.port))
                         # self.valid_host.append(('1', _n_ip, self.port))
                         self.NEIGHBORS.append(_n_ip)
