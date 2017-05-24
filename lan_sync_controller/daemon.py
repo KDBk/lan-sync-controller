@@ -11,7 +11,7 @@ from lan_sync_controller.pysyncit.server import Server
 LOG = logging.getLogger(__name__)
 
 
-class LANSyncDaemon(Thread):
+class LANSyncDaemon(object):
 
     """
     A daemon that runs the app in background
@@ -30,6 +30,7 @@ class LANSyncDaemon(Thread):
         # Have to active before start detect valid host
         # to open port.
         node.activate()
+        node.username = 'daidv'
         # _handler = ProcessHandler(SETTINGS['default-syncapp'])
         while True:
             # List valid hosts

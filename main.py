@@ -25,7 +25,7 @@ def main():
 
     if len(sys.argv) == 2:
         if sys.argv[1] == 'start':
-            daemon.start()
+            daemon.run()
         elif sys.argv[1] == 'stop':
             daemon.stop()
         elif sys.argv[1] == 'restart':
