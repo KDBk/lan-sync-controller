@@ -21,6 +21,7 @@ class PersistentSet(object):
         self.timestamp = None
         try:
             pkl_object = open(self.pkl_filename, 'rb')
+            os.chmod(self.pkl_filename, 0777)
             self.set = pickle.load(pkl_object)
         except:
             self.set = set()
@@ -28,12 +29,14 @@ class PersistentSet(object):
     def add(self, element):
         self.set.add(element)
         pkl_object = open(self.pkl_filename, 'wb')
+        os.chmod(self.pkl_filename, 0777)
         pickle.dump(self.set, pkl_object)
         pkl_object.close()
 
     def remove(self, element):
         self.set.remove(element)
         pkl_object = open(self.pkl_filename, 'wb')
+        os.chmod(self.pkl_filename, 0777)
         pickle.dump(self.set, pkl_object)
         pkl_object.close()
 
@@ -67,6 +70,7 @@ class PersistentSet(object):
         update last sync time
         """
         pkl_object = open(self.pkl_filename, 'wb')
+        os.chmod(self.pkl_filename, 0777)
         pickle.dump(self.set, pkl_object)
         #push current time
         pickle.dump(time.time, pkl_object)
