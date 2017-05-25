@@ -26,14 +26,18 @@ class LANSyncDaemon(object):
         port = int(SETTINGS['default-port'])
         watch_dirs = [SETTINGS['default-syncdir']]
         servers = list()
-        node = Server(username, port, watch_dirs, servers)
+        node = Server('kiennt', port, watch_dirs, servers)
         # Have to active before start detect valid host
         # to open port.
         node.activate()
-        node.username = 'daidv'
+        # node.username = 'kiennt'
         # _handler = ProcessHandler(SETTINGS['default-syncapp'])
         while True:
             # List valid hosts
             detector.detect_valid_hosts()
             node.servers = detector.valid_host
-            time.sleep(10)
+            # Long sleep. If this is low, loop will go too fast.
+            # PySyncit can't push modified file, new loop cycle - refresh?
+            # So, i think (just think, plz re-test) we should open 2 port.
+            # 1 for detect job, 1 for sync job.
+            time.sleep(1000)
