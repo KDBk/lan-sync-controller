@@ -138,7 +138,7 @@ class NeighborsDetector(object):
 
             net = to_CIDR_notation(network, netmask)
 
-            if interface != scapy.config.conf.iface:
+            if net != '192.168.122.0/24' and interface != scapy.config.conf.iface:
                 msg = ('Skipping %s because scapy currently doesn\'t\
                        support arping on non-primary network \
                        interfaces' % net)
@@ -158,7 +158,7 @@ class NeighborsDetector(object):
                 # If the given host opens port, get it.
                 port_rs = scan_tcp_port(_n_ip, self.port)
                 LOG.info('Scan tcp port result: %s' % port_rs)
-                if 'Open' in port_rs:
+                if 'Open' in port_rs and '.1.1' not in _n_ip:
                     LOG.info('Valid Host was founded: %s' % _n_ip)
                     if _n_ip not in self.NEIGHBORS:
                         #msg = 'Enter login information of host %s' % _n_ip
