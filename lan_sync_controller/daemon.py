@@ -35,9 +35,9 @@ class LANSyncDaemon(object):
         while True:
             # List valid hosts
             detector.detect_valid_hosts()
-            node.servers = detector.valid_host
+            node.servers = detector.valid_hosts.values()
             # Long sleep. If this is low, loop will go too fast.
             # PySyncit can't push modified file, new loop cycle - refresh?
             # So, i think (just think, plz re-test) we should open 2 port.
             # 1 for detect job, 1 for sync job.
-            time.sleep(1000)
+            time.sleep(100)

@@ -70,24 +70,6 @@ def scan_tcp_port(dst_ip, dst_port, dst_timeout=1):
     LOG.info('Start scan_tcp_port at %s' % datetime.now())
     tcp_scan_resp = sr1(IP(dst=dst_ip) / TCP(dport=dst_port),
                         timeout=dst_timeout)
-    # if not tcp_scan_resp:
-    #     return 'Filtered'
-    # elif tcp_scan_resp.haslayer(TCP):
-    #     if tcp_scan_resp.getlayer(TCP).flags == 0x12:
-    #         # send_rst = sr(IP(dst=dst_ip) / TCP(dport=dst_port),
-    #         #               timeout=dst_timeout)
-    #         return 'Open'
-    # elif tcp_scan_resp.getlayer(TCP).flags == 0x14:
-    #     return 'Closed'
-    # elif tcp_scan_resp.haslayer(ICMP):
-    #     if int(tcp_scan_resp.getlayer(ICMP).type) == 3 and \
-    #             int(udp_scan_resp.getlayer(ICMP).code) == 3:
-    #         return 'Closed'
-    #     elif int(tcp_scan_resp.getlayer(ICMP).type) == 3 and \
-    #             int(tcp_scan_resp.getlayer(ICMP).code) in [1, 2, 9, 10, 13]:
-    #         return 'Filtered'
-    #     else:
-    #         return 'CHECK'
     if not tcp_scan_resp:
         retrans = []
         for count in range(0, 3):
@@ -119,8 +101,7 @@ class NeighborsDetector(object):
 
     def __init__(self):
         self.port = int(SETTINGS['default-port'])
-        self.valid_host = list()
-        self.NEIGHBORS = list()
+        self.valid_hosts = dict()
 
     def get_all_neighbors(self):
         """Get All Available Neighbors in LAN"""
@@ -129,7 +110,7 @@ class NeighborsDetector(object):
         for network, netmask, _, interface, address in \
                 scapy.config.conf.route.routes:
             # skip loopback network and default gw
-            if network == 0 or interface == 'lo' or \
+            if network == 0 or interface == 'lo' or interface == 'enp2s0' or \
                     address == '127.0.0.1' or address == '0.0.0.0':
                 continue
 
@@ -138,7 +119,7 @@ class NeighborsDetector(object):
 
             net = to_CIDR_notation(network, netmask)
 
-            if net != '192.168.122.0/24' and interface != scapy.config.conf.iface:
+            if net != '172.17.0.0/16' and interface != scapy.config.conf.iface:
                 msg = ('Skipping %s because scapy currently doesn\'t\
                        support arping on non-primary network \
                        interfaces' % net)
@@ -160,16 +141,16 @@ class NeighborsDetector(object):
                 LOG.info('Scan tcp port result: %s' % port_rs)
                 if 'Open' in port_rs and '.1.1' not in _n_ip:
                     LOG.info('Valid Host was founded: %s' % _n_ip)
-                    if _n_ip not in self.NEIGHBORS:
+                    if _n_ip not in self.valid_hosts.keys():
                         #msg = 'Enter login information of host %s' % _n_ip
                         #title = 'Login'
                         #field_names = ['Username', 'Password']
-                        ## Start with blanks for the values
+                        # Start with blanks for the values
                         #field_values = list()
                         #field_values = multpasswordbox(msg, title, field_names)
 
-                        ## make sure that none of the fields was lelf blank
-                        #while True:
+                        # make sure that none of the fields was lelf blank
+                        # while True:
                         #    if not field_values:
                         #        break
                         #    errmsg = ''
@@ -182,11 +163,8 @@ class NeighborsDetector(object):
                         #    field_values = multpasswordbox(errmsg, title,
                         #                                   field_names,
                         #                                   field_values)
-                        #LOG.info('Auth info of host %s: %s -%s' % (_n_ip,
+                        # LOG.info('Auth info of host %s: %s -%s' % (_n_ip,
                         #                                           field_values[0],
                         #                                           field_values[1]))
-                        ## TODO (kiennt): Verify auth info
-                        self.valid_host.append(('1', _n_ip,
-                                                self.port))
-                        # self.valid_host.append(('1', _n_ip, self.port))
-                        self.NEIGHBORS.append(_n_ip)
+                        # TODO (kiennt): Verify auth info
+                        self.valid_hosts[_n_ip] = ('1', _n_ip, self.port)
