@@ -3,6 +3,8 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+lan_sync_controller/etc/*
+
 # C extensions
 *.so
 
