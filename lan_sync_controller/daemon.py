@@ -24,7 +24,7 @@ class LANSyncDaemon(base.BaseDaemon):
         detector = NeighborsDetector()
         username = getpass.getuser()
         port = int(SETTINGS['default-port'])
-        watch_dirs = SETTINGS['default-syncdir']
+        watch_dirs = [SETTINGS['default-syncdir']]
         servers = list()
         node = Server(username, port, watch_dirs, servers)
         # Have to active before start detect valid host
@@ -34,5 +34,5 @@ class LANSyncDaemon(base.BaseDaemon):
         while True:
             # List valid hosts
             detector.detect_valid_hosts()
-            node.servers = detector.valid_host
-            time.sleep(10)
+            node.servers = detector.valid_host.values()
+            time.sleep(100)

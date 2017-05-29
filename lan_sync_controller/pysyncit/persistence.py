@@ -5,6 +5,7 @@ import time
 
 __author__ = 'dushyant'
 
+
 class FileData(object):
 
     def __init__(self, file_name, time):
@@ -16,11 +17,13 @@ class PersistentSet(object):
     """
     override set to add persistence using pickle
     """
+
     def __init__(self, pkl_filename):
         self.pkl_filename = pkl_filename
         self.timestamp = None
         try:
             pkl_object = open(self.pkl_filename, 'rb')
+            os.chmod(self.pkl_filename, 0777)
             self.set = pickle.load(pkl_object)
         except:
             self.set = set()
@@ -28,12 +31,14 @@ class PersistentSet(object):
     def add(self, element):
         self.set.add(element)
         pkl_object = open(self.pkl_filename, 'wb')
+        os.chmod(self.pkl_filename, 0777)
         pickle.dump(self.set, pkl_object)
         pkl_object.close()
 
     def remove(self, element):
         self.set.remove(element)
         pkl_object = open(self.pkl_filename, 'wb')
+        os.chmod(self.pkl_filename, 0777)
         pickle.dump(self.set, pkl_object)
         pkl_object.close()
 
@@ -67,8 +72,9 @@ class PersistentSet(object):
         update last sync time
         """
         pkl_object = open(self.pkl_filename, 'wb')
+        os.chmod(self.pkl_filename, 0777)
         pickle.dump(self.set, pkl_object)
-        #push current time
+        # push current time
         pickle.dump(time.time, pkl_object)
         pkl_object.close()
 
@@ -77,6 +83,7 @@ class FilesPersistentSet(PersistentSet):
     """
     override set to add persistence using pickle
     """
+
     def __init__(self, pkl_filename):
         super(FilesPersistentSet, self).__init__(pkl_filename)
 
@@ -87,4 +94,3 @@ class FilesPersistentSet(PersistentSet):
         for filedata in list(self.set):
             if file_name == filedata.name:
                 self.set.remove(filedata)
-
