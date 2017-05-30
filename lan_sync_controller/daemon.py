@@ -34,9 +34,9 @@ class LANSyncDaemon(base.BaseDaemon):
             # List valid hosts
             detector.detect_valid_hosts()
             node.servers = detector.valid_host.values()
-            if len(node.servers) > 0:
+            if len(node.servers) > 0 and prhandler.do_method('is_running'):
                 # Turn off default sync app (GGDrive, etc)
                 prhandler.do_method('terminate')
-            else:
+            elif len(node.servers) == 0:
                 prhandler.do_method('start')
             time.sleep(100)
