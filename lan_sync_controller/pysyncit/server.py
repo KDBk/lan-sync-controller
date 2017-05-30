@@ -126,8 +126,12 @@ class Server(Node):
                         passwd, server_ip, server_port = server
                         # Add by daidv, only send file name alter for full path file to server
                         filedata_name = self.format_file_name(filedata.name)
-                        server_uname, dest_file, mtime_server = rpc.req_push_file(server_ip, server_port, filedata_name)
-                        logger.debug("destination file name %s", dest_file)
+                        server_return = rpc.req_push_file(server_ip, server_port, filedata_name)
+                        if server_return:
+                            server_uname, dest_file, mtime_server = server_return
+                        else:
+                            continue
+                        logger.info("destination file name %s", dest_file)
                         mtime_client = os.stat(filename).st_mtime
                         print(mtime_server, mtime_client)
                         if float(mtime_server) >= float(mtime_client):
