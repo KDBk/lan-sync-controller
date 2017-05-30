@@ -114,7 +114,8 @@ class Server(Node):
                 time.sleep(10)
                 for filedata in mfiles.list():
                     filename = filedata.name
-                    if not filename:
+                    # Skip if can't find any servers.
+                    if not filename or len(self.servers):
                         continue
                     if '.swp' in filename:
                         mfiles.remove(filename)
