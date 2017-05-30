@@ -120,8 +120,9 @@ class Server(Node):
                     if '.swp' in filename:
                         mfiles.remove(filename)
                         continue
-                    logger.info("push filedata object to server %s", filedata)
                     for server in self.servers:
+                        logger.info('push filedata object {} to server {}' .
+                                    format(filedata, server))
                         passwd, server_ip, server_port = server
                         # Add by daidv, only send file name alter for full path file to server
                         filedata_name = self.format_file_name(filedata.name)
