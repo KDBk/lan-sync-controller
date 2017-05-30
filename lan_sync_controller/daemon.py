@@ -1,4 +1,3 @@
-import getpass
 import logging
 import time
 
@@ -22,7 +21,7 @@ class LANSyncDaemon(base.BaseDaemon):
         # in LAN. Vaild host is the host which open
         # SETTINGS['default-port'].
         detector = NeighborsDetector()
-        username = getpass.getuser()
+        username = SETTINGS['default-user']
         port = int(SETTINGS['default-port'])
         watch_dirs = [SETTINGS['default-syncdir']]
         servers = list()
