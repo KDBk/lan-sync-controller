@@ -119,13 +119,17 @@ class Server(Node):
                     if '.swp' in filename:
                         mfiles.remove(filename)
                         continue
-                    logger.info("push filedata object to server %s", filedata)
+                    if len(self.servers) == 0:
+                        logger.info('Dont find any servers, skip...')
+                        continue
                     for server in self.servers:
+                        logger.info('push filedata object {} to server {}' .
+                                    format(filedata, server))
                         passwd, server_ip, server_port = server
                         # Add by daidv, only send file name alter for full path file to server
                         filedata_name = self.format_file_name(filedata.name)
                         server_uname, dest_file, mtime_server = rpc.req_push_file(server_ip, server_port, filedata_name)
-                        logger.debug("destination file name %s", dest_file)
+                        logger.info("destination file name %s", dest_file)
                         mtime_client = os.stat(filename).st_mtime
                         print(mtime_server, mtime_client)
                         if float(mtime_server) >= float(mtime_client):
