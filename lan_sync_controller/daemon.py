@@ -4,8 +4,8 @@ import time
 from lan_sync_controller import base
 from lan_sync_controller.config_loader import SETTINGS
 from lan_sync_controller.discovery import NeighborsDetector
+from lan_sync_controller.process_handler import ProcessHandler
 from lan_sync_controller.pysyncit.server import Server
-# from lan_sync_controller.process_handler import ProcessHandler
 
 LOG = logging.getLogger(__name__)
 
