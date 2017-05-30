@@ -40,4 +40,4 @@ class LANSyncDaemon(object):
             # PySyncit can't push modified file, new loop cycle - refresh?
             # So, i think (just think, plz re-test) we should open 2 port.
             # 1 for detect job, 1 for sync job.
-            time.sleep(60)
+            time.sleep(5)
