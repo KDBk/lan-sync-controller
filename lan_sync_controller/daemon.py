@@ -4,7 +4,7 @@ import time
 from threading import Thread
 
 from lan_sync_controller.config_loader import SETTINGS
-from lan_sync_controller.discovery import NeighborsDetector
+from lan_sync_controller.discovery import NeighborsDetector, SYNC_SERVERS
 from lan_sync_controller.pysyncit.server import Server
 # from lan_sync_controller.process_handler import ProcessHandler
 
@@ -22,11 +22,10 @@ class LANSyncDaemon(object):
         # in LAN. Vaild host is the host which open
         # SETTINGS['default-port'].
         detector = NeighborsDetector()
-        username = getpass.getuser()
+        # username = getpass.getuser()
         port = int(SETTINGS['default-port'])
         watch_dirs = [SETTINGS['default-syncdir']]
-        servers = list()
-        node = Server('kiennt', port, watch_dirs, servers)
+        node = Server('kiennt', port, watch_dirs, SYNC_SERVERS)
         # Have to active before start detect valid host
         # to open port.
         node.activate()
@@ -34,8 +33,8 @@ class LANSyncDaemon(object):
         # _handler = ProcessHandler(SETTINGS['default-syncapp'])
         while True:
             # List valid hosts
-            detector.detect_valid_hosts()
-            node.servers = detector.valid_hosts.values()
+            detector.get_all_neighbors()
+            # node.servers = detector.valid_hosts.values()
             # Long sleep. If this is low, loop will go too fast.
             # PySyncit can't push modified file, new loop cycle - refresh?
             # So, i think (just think, plz re-test) we should open 2 port.

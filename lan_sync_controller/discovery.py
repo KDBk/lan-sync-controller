@@ -16,6 +16,9 @@ from lan_sync_controller.config_loader import SETTINGS
 LOG = logging.getLogger(__name__)
 
 
+SYNC_SERVERS = list()
+
+
 def long2net(arg):
     """Convert long to netmask"""
     if (arg <= 0 or arg >= 0xFFFFFFFF):
@@ -34,7 +37,36 @@ def to_CIDR_notation(bytes_network, bytes_netmask):
     return net
 
 
-def scan_and_get_neighbors(net, interface, timeout=1):
+def get_user_and_pwd(host_ip):
+    msg = 'Enter login information of host %s' % host_ip
+    title = 'Login'
+    field_names = ['Username', 'Password']
+    # Start with blanks for the values
+    field_values = list()
+    field_values = multpasswordbox(msg, title, field_names)
+
+    # make sure that none of the fields was lelf blank
+    while True:
+        if not field_values:
+            break
+        errmsg = ''
+        for i in range(len(field_names)):
+            if field_values[i].strip() == '':
+                errmsg = errmsg + ('"%s" is a required field.\
+                                  \n\n' % field_names[i])
+        if errmsg == '':
+            break
+        field_values = multpasswordbox(errmsg, title,
+                                       field_names,
+                                       field_values)
+    LOG.info('Auth info of host %s: %s -%s' % (host_ip,
+                                               field_values[0],
+                                               field_values[1]))
+    # TODO (kiennt): Verify auth info
+    return field_values
+
+
+def scan_and_get_neighbors(net, interface, port, timeout=1):
     """Get list interfaces, then scan in each network
     and get available neighbors. Actually, it will  ping`
     to each ip in network, then wait for reply (received packet)
@@ -48,10 +80,15 @@ def scan_and_get_neighbors(net, interface, timeout=1):
         ans, unans = scapy.layers.l2.arping(net, iface=interface,
                                             timeout=timeout,
                                             verbose=False)
-        neighbors = []
         for s, r in ans.res:
-            neighbors.append(r.sprintf('%ARP.psrc%'))
-        return neighbors
+            _valid_ip = r.sprintf('%ARP.psrc%')
+            LOG.info('Scan tcp port - ip: %s - %s' % (port, _valid_ip))
+            port_rs = scan_tcp_port(_valid_ip, port)
+            LOG.info('Scan tcp port result: %s' % port_rs)
+            if (port_rs == 'Open') and (_valid_ip not in SYNC_SERVERS):
+                # auth_info = get_user_and_pwd(_valid_ip)
+                # SYNC_SERVERS.append((auth_info[1], _valid_ip, port))
+                SYNC_SERVERS.append(('1', _valid_ip, port))
     except socket.error as e:
         if e.errno == errno.EPERM:
             LOG.error('%s. Did you run as root?' % (e.strerror))
@@ -101,12 +138,10 @@ class NeighborsDetector(object):
 
     def __init__(self):
         self.port = int(SETTINGS['default-port'])
-        self.valid_hosts = dict()
 
     def get_all_neighbors(self):
         """Get All Available Neighbors in LAN"""
         LOG.info('Start get_all_neighbors at %s' % datetime.now())
-        result = {}
         for network, netmask, _, interface, address in \
                 scapy.config.conf.route.routes:
             # skip loopback network and default gw
@@ -127,44 +162,5 @@ class NeighborsDetector(object):
                 continue
 
             if net:
-                result[interface] = scan_and_get_neighbors(net, interface)
+                scan_and_get_neighbors(net, interface, self.port)
         LOG.info('End get_all_neighbors at %s' % datetime.now())
-        return result
-
-    def detect_valid_hosts(self):
-        """Detect valid host, which open a given port"""
-        neighbors = self.get_all_neighbors()
-        for neighbor in neighbors.values():
-            for _n_ip in neighbor:
-                # If the given host opens port, get it.
-                port_rs = scan_tcp_port(_n_ip, self.port)
-                LOG.info('Scan tcp port result: %s' % port_rs)
-                if 'Open' in port_rs and '.1.1' not in _n_ip:
-                    LOG.info('Valid Host was founded: %s' % _n_ip)
-                    if _n_ip not in self.valid_hosts.keys():
-                        #msg = 'Enter login information of host %s' % _n_ip
-                        #title = 'Login'
-                        #field_names = ['Username', 'Password']
-                        # Start with blanks for the values
-                        #field_values = list()
-                        #field_values = multpasswordbox(msg, title, field_names)
-
-                        # make sure that none of the fields was lelf blank
-                        # while True:
-                        #    if not field_values:
-                        #        break
-                        #    errmsg = ''
-                        #    for i in range(len(field_names)):
-                        #        if field_values[i].strip() == '':
-                        #            errmsg = errmsg + ('"%s" is a required field.\
-                        #                               \n\n' % field_names[i])
-                        #    if errmsg == '':
-                        #        break
-                        #    field_values = multpasswordbox(errmsg, title,
-                        #                                   field_names,
-                        #                                   field_values)
-                        # LOG.info('Auth info of host %s: %s -%s' % (_n_ip,
-                        #                                           field_values[0],
-                        #                                           field_values[1]))
-                        # TODO (kiennt): Verify auth info
-                        self.valid_hosts[_n_ip] = ('1', _n_ip, self.port)
