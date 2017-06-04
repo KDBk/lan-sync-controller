@@ -3,7 +3,7 @@ import time
 
 from lan_sync_controller import base
 from lan_sync_controller.config_loader import SETTINGS
-from lan_sync_controller.discovery import NeighborsDetector
+from lan_sync_controller.discovery import NeighborsDetector, SYNC_SERVERS
 from lan_sync_controller.process_handler import ProcessHandler
 from lan_sync_controller.pysyncit.server import Server
 
@@ -24,19 +24,17 @@ class LANSyncDaemon(base.BaseDaemon):
         username = SETTINGS['default-user']
         port = int(SETTINGS['default-port'])
         watch_dirs = [SETTINGS['default-syncdir']]
-        servers = list()
-        node = Server(username, port, watch_dirs, servers)
+        node = Server(username, port, watch_dirs, SYNC_SERVERS)
         # Have to active before start detect valid host
         # to open port.
         node.activate()
         prhandler = ProcessHandler(SETTINGS['default-syncapp'])
         while True:
             # List valid hosts
-            detector.detect_valid_hosts()
-            node.servers = detector.valid_hosts.values()
+            detector.get_all_neighbors()
             if len(node.servers) > 0 and prhandler.do_method('is_running'):
                 # Turn off default sync app (GGDrive, etc)
                 prhandler.do_method('terminate')
             elif len(node.servers) == 0:
                 prhandler.do_method('start')
-            time.sleep(100)
+            time.sleep(10)
