@@ -1,4 +1,5 @@
 import logging
+import subprocess
 import time
 
 from lan_sync_controller import base
@@ -29,6 +30,7 @@ class LANSyncDaemon(base.BaseDaemon):
         # to open port.
         node.activate()
         prhandler = ProcessHandler(SETTINGS['default-syncapp'])
+        exe = prhandler.do_method('exe') # Get execute file path.
         while True:
             # List valid hosts
             detector.get_all_neighbors()
@@ -36,5 +38,5 @@ class LANSyncDaemon(base.BaseDaemon):
                 # Turn off default sync app (GGDrive, etc)
                 prhandler.do_method('terminate')
             elif len(node.servers) == 0:
-                prhandler.do_method('start')
+                subprocess.call(exe[0], shell=True)
             time.sleep(10)
