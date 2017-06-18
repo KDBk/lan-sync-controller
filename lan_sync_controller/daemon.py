@@ -40,7 +40,7 @@ class LANSyncDaemon(base.BaseDaemon):
             elif len(node.servers) == 0:
                 # Sometime we have more than one execute files.
                 # In this case, get the first one.
-                if isinstance(list, exe):
+                if isinstance(exe, list):
                     exe = exe[0]
                 subprocess.call(exe, shell=True)
             time.sleep(10)
