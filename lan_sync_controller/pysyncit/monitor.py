@@ -23,6 +23,6 @@ def run(servers):
     username = getpass.getuser()
     port = int(SETTINGS['default-port'])
     watch_dirs = SETTINGS['default-syncdir']
-    node = Server(username, port, watch_dirs, servers)
+    node = Server(username, port, watch_dirs)
     setup_logging("/tmp/syncit.log.%s-%s" % (username, port))
     node.activate()

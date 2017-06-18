@@ -33,10 +33,8 @@ PIPE = subprocess.PIPE
 
 
 class Handler(FileSystemEventHandler):
-    def __init__(self, mfiles, rfiles, pulledfiles):
+    def __init__(self, mfiles):
         self.mfiles = mfiles
-        self.rfiles = rfiles
-        self.pulled_files = pulledfiles
 
     # @staticmethod
     def on_any_event(self, event):
@@ -45,24 +43,17 @@ class Handler(FileSystemEventHandler):
 
         elif event.event_type == 'created':
             filename = event.src_path
-            if not self.pulled_files.__contains__(filename):
-                self.mfiles.add(filename, time.time())
-                logger.info("Created file: %s", filename)
-            else:
-                pass
-                self.pulled_files.remove(filename)
+            self.mfiles.add(filename, time.time(), 'created')
+            logger.info("Created file: %s", filename)
 
         elif event.event_type == 'modified':
             filename = event.src_path
-            if not self.pulled_files.__contains__(filename):
-                self.mfiles.add(filename, time.time())
-                logger.info("Modified file: %s", filename)
-            else:
-                self.pulled_files.remove(filename)
+            self.mfiles.add(filename, time.time(), 'modified')
+            logger.info("Modified file: %s", filename)
 
         elif event.event_type == 'deleted':
             filename = event.src_path
-            self.rfiles.add(filename)
+            self.mfiles.add(filename, time.time(), 'deleted')
             try:
                 self.mfiles.remove(filename)
             except KeyError:
@@ -73,13 +64,12 @@ class Handler(FileSystemEventHandler):
 class Server(Node):
     """Server class"""
 
-    def __init__(self, username, port, watch_dirs, servers):
+    def __init__(self, username, port, watch_dirs):
         super(Server, self).__init__(username, port, watch_dirs)
-        self.servers = servers
         self.mfiles = FilesPersistentSet(pkl_filename='{}/node.pkl' .format(DIR_PATH))  # set() #set of modified files
-        self.rfiles = set()  # set of removed filess
-        self.pulled_files = set()
-        self.server_available = True
+
+    def event(self, filename, timestamp, event_type, serverip):
+        self.mfiles.add(filename, timestamp, event_type, serverip)
 
     def push_file(self, filename, dest_file, passwd, dest_uname, dest_ip):
         """push file 'filename' to the destination"""
@@ -92,6 +82,18 @@ class Server(Node):
         push_status = proc.wait()
         logger.debug("returned status %s", push_status)
         return push_status
+
+    def pull_file(self, filename, dest_file, passwd, dest_uname, dest_ip):
+        """Pull file 'filename' to the destination"""
+        command = "{} -q -p -l {} -pw {} {}@{}:{} {}".format(
+            PSCP_COMMAND[ENV], self.username, passwd,
+            dest_uname, dest_ip, dest_file, filename).split()
+        print(command)
+        proc = subprocess.Popen(command, stdout=PIPE, stderr=PIPE, stdin=PIPE)
+        proc.stdin.write('y')
+        pull_status = proc.wait()
+        logger.debug("returned status %s", pull_status)
+        return pull_status
 
     def req_push_file(self, filename):
         """Mark this file as to be notified to clients - this file 'filename' has been modified, pull the latest copy"""
@@ -106,46 +108,41 @@ class Server(Node):
             mtime_server = 0
         return (self.username, server_filename, mtime_server)
 
+    def req_pull_file(self, filename):
+        my_file = "{}{}".format(self.watch_dirs[0], filename)
+        server_filename = my_file
+        logger.debug("server filename %s returned for file %s", server_filename, filename)
+        return (self.username, server_filename)
+
     def sync_files_to_server(self):
         """Sync all the files present in the mfiles set and push this set"""
         mfiles = self.mfiles
         while True:
             try:
                 time.sleep(10)
+                # TODO(daidv): Do someting like summary list mfiles, compare and return list action
                 for filedata in mfiles.list():
                     filename = filedata.name
+                    serverip = filedata.serverip
                     if not filename:
                         continue
                     if '.swp' in filename:
                         mfiles.remove(filename)
                         continue
-                    if len(self.servers) == 0:
-                        logger.info('Dont find any servers, skip...')
+                    # Add by daidv, only send file name alter for full path file to server
+                    filedata_name = self.format_file_name(filedata.name)
+                    server_return = rpc.req_pull_file(serverip, self.port, filedata_name)
+                    if server_return:
+                        server_uname, dest_file = server_return
+                    else:
                         continue
-                    for server in self.servers:
-                        logger.info('push filedata object {} to server {}' .
-                                    format(filedata, server))
-                        passwd, server_ip, server_port = server
-                        # Add by daidv, only send file name alter for full path file to server
-                        filedata_name = self.format_file_name(filedata.name)
-                        server_return = rpc.req_push_file(server_ip, server_port, filedata_name)
-                        if server_return:
-                            server_uname, dest_file, mtime_server = server_return
-                        else:
-                            continue
-                        logger.info("destination file name %s", dest_file)
-                        mtime_client = os.stat(filename).st_mtime
-                        print(mtime_server, mtime_client)
-                        if float(mtime_server) >= float(mtime_client):
-                            mfiles.remove(filename)
-                            continue
-                        if dest_file is None:
-                            continue
-                        push_status = self.push_file(filename, dest_file, passwd, server_uname, server_ip)
-                        if (push_status < 0):
-                            continue
+                    logger.info("destination file name %s", dest_file)
+                    if dest_file is None:
+                        continue
+                    pull_status = self.pull_file(filename, dest_file, '1', server_uname, serverip)
+                    if pull_status < 0:
+                        continue
                     mfiles.remove(filename)
-                self.mfiles.update_modified_timestamp()
             except KeyboardInterrupt:
                 break
 
@@ -171,7 +168,7 @@ class Server(Node):
         """keep a watch on files present in sync directories"""
         ob = Observer()
         # watched events
-        ob.schedule(Handler(self.mfiles, self.rfiles, self.pulled_files), self.watch_dirs[0])
+        ob.schedule(Handler(self.mfiles), self.watch_dirs[0])
         ob.start()
         logger.debug("watched dir %s", self.watch_dirs)
         try:

@@ -25,7 +25,7 @@ class LANSyncDaemon(object):
         # username = getpass.getuser()
         port = int(SETTINGS['default-port'])
         watch_dirs = [SETTINGS['default-syncdir']]
-        node = Server('kiennt', port, watch_dirs, SYNC_SERVERS)
+        node = Server('daidv', port, watch_dirs)
         # Have to active before start detect valid host
         # to open port.
         node.activate()

@@ -7,9 +7,11 @@ __author__ = 'dushyant'
 
 class FileData(object):
 
-    def __init__(self, file_name, time):
+    def __init__(self, file_name, timestamp, serverip, event_type):
         self.name = file_name
-        self.time = time
+        self.timestamp = timestamp
+        self.serverip = serverip
+        self.event_type = event_type
 
 
 class PersistentSet(object):
@@ -65,17 +67,6 @@ class PersistentSet(object):
 #            else:
 #                raise
 
-    def update_modified_timestamp(self):
-        """
-        update last sync time
-        """
-        pkl_object = open(self.pkl_filename, 'wb')
-        os.chmod(self.pkl_filename, 0777)
-        pickle.dump(self.set, pkl_object)
-        #push current time
-        pickle.dump(time.time, pkl_object)
-        pkl_object.close()
-
 
 class FilesPersistentSet(PersistentSet):
     """
@@ -84,8 +75,9 @@ class FilesPersistentSet(PersistentSet):
     def __init__(self, pkl_filename):
         super(FilesPersistentSet, self).__init__(pkl_filename)
 
-    def add(self, file_name, modified_time):
-        super(FilesPersistentSet, self).add(FileData(file_name, modified_time))
+    def add(self, file_name, timestamp, event_type=None, serverip='local'):
+        super(FilesPersistentSet, self).add(FileData(
+            file_name, timestamp, event_type, serverip))
 
     def remove(self, file_name):
         for filedata in list(self.set):

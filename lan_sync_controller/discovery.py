@@ -146,7 +146,7 @@ class NeighborsDetector(object):
                 scapy.config.conf.route.routes:
             # skip loopback network and default gw
             if network == 0 or interface == 'lo' or interface == 'enp2s0' or \
-                    address == '127.0.0.1' or address == '0.0.0.0':
+                    address == '127.0.0.1' or address == '0.0.0.0' or address == '192.168.122.1':
                 continue
 
             if netmask <= 0 or netmask == 0xFFFFFFFF:
