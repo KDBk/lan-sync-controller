@@ -26,7 +26,7 @@ class ProcessHandler(object):
         if len(proc_list) == 0:
             msg = ('Unable to find process %s. Wrong process name or this\
                    process wasn\'t running' % self.proc_name)
-            LOG.exception(msg)
+            LOG.info(msg)
             return None
         else:
             msg = ('List of suitable processes: %s' % proc_list)
@@ -63,7 +63,8 @@ class ProcessHandler(object):
     def get_executable_file(self):
         """Get executable file path, like which command in Linux"""
         exe_file = self.exe()
-        LOG.info('Find executable file %s!' % exe_file)
+        if exe_file:
+            LOG.info('Find executable file %s!' % exe_file)
         return exe_file
 
 
