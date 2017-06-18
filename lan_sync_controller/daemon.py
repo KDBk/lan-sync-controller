@@ -6,6 +6,7 @@ from lan_sync_controller import base
 from lan_sync_controller.config_loader import SETTINGS
 from lan_sync_controller.discovery import NeighborsDetector, SYNC_SERVERS
 from lan_sync_controller.process_handler import ProcessHandler
+from lan_sync_controller.process_handler import start_application
 from lan_sync_controller.pysyncit.server import Server
 
 LOG = logging.getLogger(__name__)
@@ -30,7 +31,7 @@ class LANSyncDaemon(base.BaseDaemon):
         # to open port.
         node.activate()
         prhandler = ProcessHandler(SETTINGS['default-syncapp'])
-        exe = prhandler.do_method('exe') # Get execute file path.
+        exe = prhandler._get_executable_file()
         while True:
             # List valid hosts
             detector.get_all_neighbors()
@@ -38,5 +39,5 @@ class LANSyncDaemon(base.BaseDaemon):
                 # Turn off default sync app (GGDrive, etc)
                 prhandler.do_method('terminate')
             elif len(node.servers) == 0:
-                subprocess.call(exe, shell=True)
+                start_application(exe)
             time.sleep(10)

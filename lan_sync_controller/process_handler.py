@@ -43,7 +43,11 @@ class ProcessHandler(object):
             result = []
             for proc in processes:
                 try:
-                    result.append(getattr(proc, method))
+                    LOG.info('Do method %s in process %s: Start' % (method,
+                                                             str(proc.pid())))
+                    result.append(getattr(proc, method)())
+                    LOG.info('Do method %s in process %s: Finish' % (method,
+                                                                   str(proc.pid())))
                 except Exception as e:
                     LOG.error('Process object %s doesn\'t method %s' %
                               (self.proc_name, method))
@@ -59,7 +63,7 @@ class ProcessHandler(object):
     def _get_executable_file(self):
         """Get executable file path, like which command in Linux"""
         exe_file = self.do_method('exe')
-        LOG.info('Find executable file = %s' % exe_file)
+        LOG.info('Find executable file %s!' % exe_file)
         return exe_file
 
 
