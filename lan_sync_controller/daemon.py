@@ -38,9 +38,5 @@ class LANSyncDaemon(base.BaseDaemon):
                 # Turn off default sync app (GGDrive, etc)
                 prhandler.do_method('terminate')
             elif len(node.servers) == 0:
-                # Sometime we have more than one execute files.
-                # In this case, get the first one.
-                if isinstance(exe, list):
-                    exe = exe[0]
                 subprocess.call(exe, shell=True)
             time.sleep(10)
