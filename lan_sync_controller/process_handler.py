@@ -41,17 +41,17 @@ class ProcessHandler(object):
             return None
         else:
             result = []
+            LOG.info('Do method %s in process %s: Start' % (method,
+                                                            self.proc_name))
             for proc in processes:
                 try:
-                    LOG.info('Do method %s in process %s: Start' % (method,
-                                                             str(proc.pid())))
                     result.append(getattr(proc, method)())
-                    LOG.info('Do method %s in process %s: Finish' % (method,
-                                                                   str(proc.pid())))
                 except Exception as e:
                     LOG.error('Process object %s doesn\'t method %s' %
                               (self.proc_name, method))
                     raise e
+            LOG.info('Do method %s in process %s: Finish' % (method,
+                                                             self.proc_name))
             return result
 
     def __getattr__(self, method):
@@ -60,9 +60,9 @@ class ProcessHandler(object):
             return self.do_method(method)
         return fn
 
-    def _get_executable_file(self):
+    def get_executable_file(self):
         """Get executable file path, like which command in Linux"""
-        exe_file = self.do_method('exe')
+        exe_file = self.exe()
         LOG.info('Find executable file %s!' % exe_file)
         return exe_file
 
@@ -72,8 +72,8 @@ def start_application(exe_file):
     try:
         subprocess.Popen(exe_file[0], stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE, shell=True)
-        LOG.info('Start application with path = %s successfully!' % exe_file)
+        LOG.info('Start application with path %s successfully!' % exe_file)
     except Exception as e:
-        msg = ('Start application with path = %s failed!' % exe_file)
+        msg = ('Start application with path %s failed!' % exe_file)
         LOG.error(msg)
         raise e

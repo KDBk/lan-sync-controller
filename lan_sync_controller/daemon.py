@@ -31,13 +31,13 @@ class LANSyncDaemon(base.BaseDaemon):
         # to open port.
         node.activate()
         prhandler = ProcessHandler(SETTINGS['default-syncapp'])
-        exe = prhandler._get_executable_file()
+        exe = prhandler.get_executable_file()
         while True:
             # List valid hosts
             detector.get_all_neighbors()
-            if len(node.servers) > 0 and prhandler.do_method('is_running'):
+            if len(node.servers) > 0 and prhandler.is_running():
                 # Turn off default sync app (GGDrive, etc)
-                prhandler.do_method('terminate')
+                prhandler.terminate()
             elif len(node.servers) == 0:
                 start_application(exe)
             time.sleep(10)
