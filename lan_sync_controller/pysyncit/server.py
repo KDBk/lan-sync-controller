@@ -69,19 +69,8 @@ class Server(Node):
         self.mfiles = FilesPersistentSet(pkl_filename='{}/node.pkl' .format(DIR_PATH))  # set() #set of modified files
 
     def event(self, filename, timestamp, event_type, serverip):
+        print("{} {} {} {}" .format(filename, timestamp, event_type, serverip))
         self.mfiles.add(filename, timestamp, event_type, serverip)
-
-    def push_file(self, filename, dest_file, passwd, dest_uname, dest_ip):
-        """push file 'filename' to the destination"""
-        command = "{} -q -p -l {} -pw {} {} {}@{}:{}".format(
-            PSCP_COMMAND[ENV], self.username, passwd,
-            filename, dest_uname, dest_ip, dest_file).split()
-        print(command)
-        proc = subprocess.Popen(command, stdout=PIPE, stderr=PIPE, stdin=PIPE)
-        proc.stdin.write('y')
-        push_status = proc.wait()
-        logger.debug("returned status %s", push_status)
-        return push_status
 
     def pull_file(self, filename, dest_file, passwd, dest_uname, dest_ip):
         """Pull file 'filename' to the destination"""
@@ -94,19 +83,6 @@ class Server(Node):
         pull_status = proc.wait()
         logger.debug("returned status %s", pull_status)
         return pull_status
-
-    def req_push_file(self, filename):
-        """Mark this file as to be notified to clients - this file 'filename' has been modified, pull the latest copy"""
-        logger.debug("server filedata %s", filename)
-        my_file = "{}{}".format(self.watch_dirs[0], filename)
-        server_filename = my_file
-
-        logger.debug("server filename %s returned for file %s", server_filename, filename)
-        try:
-            mtime_server = os.stat(server_filename).st_mtime
-        except Exception as e:
-            mtime_server = 0
-        return (self.username, server_filename, mtime_server)
 
     def req_pull_file(self, filename):
         my_file = "{}{}".format(self.watch_dirs[0], filename)

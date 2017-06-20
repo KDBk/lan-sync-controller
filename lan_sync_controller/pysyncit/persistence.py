@@ -75,7 +75,7 @@ class FilesPersistentSet(PersistentSet):
     def __init__(self, pkl_filename):
         super(FilesPersistentSet, self).__init__(pkl_filename)
 
-    def add(self, file_name, timestamp, event_type=None, serverip='local'):
+    def add(self, file_name, timestamp, event_type=None, serverip='localhost'):
         super(FilesPersistentSet, self).add(FileData(
             file_name, timestamp, event_type, serverip))
 
