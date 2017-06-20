@@ -27,8 +27,9 @@ class Handler(SimpleXMLRPCRequestHandler):
 class Node(object):
     """Base class for client and server"""
 
-    def __init__(self, username, port, watch_dirs):
+    def __init__(self, username, ip, port, watch_dirs):
         self.username = username
+        self.ip = ip
         self.port = int(port)
         self.watch_dirs = watch_dirs
 

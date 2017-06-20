@@ -23,9 +23,10 @@ class LANSyncDaemon(object):
         # SETTINGS['default-port'].
         detector = NeighborsDetector()
         # username = getpass.getuser()
+        ip = SETTINGS['default-ip']
         port = int(SETTINGS['default-port'])
         watch_dirs = [SETTINGS['default-syncdir']]
-        node = Server('daidv', port, watch_dirs)
+        node = Server('daidv', ip, port, watch_dirs)
         # Have to active before start detect valid host
         # to open port.
         node.activate()

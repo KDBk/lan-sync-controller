@@ -17,6 +17,7 @@ import time
 
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
+from serfclient.client import SerfClient
 
 import rpc
 from lan_sync_controller.pysyncit.node import Node
@@ -30,11 +31,13 @@ logger = logging.getLogger('syncIt')
 PSCP_COMMAND = {'Linux': 'pscp', 'Windows': 'C:\pscp.exe'}
 ENV = platform.system()
 PIPE = subprocess.PIPE
+client = SerfClient()
 
 
 class Handler(FileSystemEventHandler):
-    def __init__(self, mfiles):
+    def __init__(self, mfiles, ip):
         self.mfiles = mfiles
+        self.ip = ip
 
     # @staticmethod
     def on_any_event(self, event):
@@ -43,17 +46,23 @@ class Handler(FileSystemEventHandler):
 
         elif event.event_type == 'created':
             filename = event.src_path
-            self.mfiles.add(filename, time.time(), 'created')
+            timestamp = time.time()
+            self.mfiles.add(filename, timestamp, 'created')
+            client.event('created|{}|{}|{}'.format(filename, timestamp, self.ip))
             logger.info("Created file: %s", filename)
 
         elif event.event_type == 'modified':
             filename = event.src_path
-            self.mfiles.add(filename, time.time(), 'modified')
+            timestamp = time.time()
+            self.mfiles.add(filename, timestamp, 'modified')
+            client.event('modified|{}|{}|{}'.format(filename, timestamp, self.ip))
             logger.info("Modified file: %s", filename)
 
         elif event.event_type == 'deleted':
             filename = event.src_path
-            self.mfiles.add(filename, time.time(), 'deleted')
+            timestamp = time.time()
+            self.mfiles.add(filename, timestamp, 'deleted')
+            client.event('deleted|{}|{}|{}'.format(filename, timestamp, self.ip))
             try:
                 self.mfiles.remove(filename)
             except KeyError:
@@ -64,12 +73,12 @@ class Handler(FileSystemEventHandler):
 class Server(Node):
     """Server class"""
 
-    def __init__(self, username, port, watch_dirs):
-        super(Server, self).__init__(username, port, watch_dirs)
+    def __init__(self, username, ip, port, watch_dirs):
+        super(Server, self).__init__(username, ip, port, watch_dirs)
         self.mfiles = FilesPersistentSet(pkl_filename='{}/node.pkl' .format(DIR_PATH))  # set() #set of modified files
 
     def event(self, filename, timestamp, event_type, serverip):
-        print("{} {} {} {}" .format(filename, timestamp, event_type, serverip))
+        print("CALL EVENT: {} {} {} {}" .format(filename, timestamp, event_type, serverip))
         self.mfiles.add(filename, timestamp, event_type, serverip)
 
     def pull_file(self, filename, dest_file, passwd, dest_uname, dest_ip):
@@ -98,6 +107,7 @@ class Server(Node):
                 time.sleep(10)
                 # TODO(daidv): Do someting like summary list mfiles, compare and return list action
                 for filedata in mfiles.list():
+                    print(filedata)
                     filename = filedata.name
                     serverip = filedata.serverip
                     if not filename:
@@ -144,7 +154,7 @@ class Server(Node):
         """keep a watch on files present in sync directories"""
         ob = Observer()
         # watched events
-        ob.schedule(Handler(self.mfiles), self.watch_dirs[0])
+        ob.schedule(Handler(self.mfiles, self.ip), self.watch_dirs[0])
         ob.start()
         logger.debug("watched dir %s", self.watch_dirs)
         try:
