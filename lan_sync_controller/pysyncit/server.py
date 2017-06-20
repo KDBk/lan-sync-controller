@@ -17,6 +17,7 @@ import time
 
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
+from serfclient.client import SerfClient
 
 import rpc
 from lan_sync_controller.pysyncit.node import Node
@@ -30,6 +31,7 @@ logger = logging.getLogger('syncIt')
 PSCP_COMMAND = {'Linux': 'pscp', 'Windows': 'C:\pscp.exe'}
 ENV = platform.system()
 PIPE = subprocess.PIPE
+client = SerfClient()
 
 
 class Handler(FileSystemEventHandler):
@@ -43,17 +45,23 @@ class Handler(FileSystemEventHandler):
 
         elif event.event_type == 'created':
             filename = event.src_path
-            self.mfiles.add(filename, time.time(), 'created')
+            timestamp = time.time()
+            self.mfiles.add(filename, timestamp, 'created')
+            client.event('created|{}|{}|serverip'.format(filename, timestamp))
             logger.info("Created file: %s", filename)
 
         elif event.event_type == 'modified':
             filename = event.src_path
-            self.mfiles.add(filename, time.time(), 'modified')
+            timestamp = time.time()
+            self.mfiles.add(filename, timestamp, 'modified')
+            client.event('modified|{}|{}|serverip'.format(filename, timestamp))
             logger.info("Modified file: %s", filename)
 
         elif event.event_type == 'deleted':
             filename = event.src_path
-            self.mfiles.add(filename, time.time(), 'deleted')
+            timestamp = time.time()
+            self.mfiles.add(filename, timestamp, 'deleted')
+            client.event('deleted|{}|{}|serverip'.format(filename, timestamp))
             try:
                 self.mfiles.remove(filename)
             except KeyError:
