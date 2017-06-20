@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Pycharms
+.idea/*
+
 lan_sync_controller/etc/*
 
 # C extensions
