@@ -48,21 +48,33 @@ class Handler(FileSystemEventHandler):
             filename = event.src_path
             timestamp = time.time()
             self.mfiles.add(filename, timestamp, 'created')
+<<<<<<< HEAD
             client.event('created|{}|{}|{}'.format(filename, timestamp, self.ip))
+=======
+            client.event('created|{}|{}|serverip'.format(filename, timestamp))
+>>>>>>> 2547730fac3e24d7d2caa31aab45b67efaf40cf8
             logger.info("Created file: %s", filename)
 
         elif event.event_type == 'modified':
             filename = event.src_path
             timestamp = time.time()
             self.mfiles.add(filename, timestamp, 'modified')
+<<<<<<< HEAD
             client.event('modified|{}|{}|{}'.format(filename, timestamp, self.ip))
+=======
+            client.event('modified|{}|{}|serverip'.format(filename, timestamp))
+>>>>>>> 2547730fac3e24d7d2caa31aab45b67efaf40cf8
             logger.info("Modified file: %s", filename)
 
         elif event.event_type == 'deleted':
             filename = event.src_path
             timestamp = time.time()
             self.mfiles.add(filename, timestamp, 'deleted')
+<<<<<<< HEAD
             client.event('deleted|{}|{}|{}'.format(filename, timestamp, self.ip))
+=======
+            client.event('deleted|{}|{}|serverip'.format(filename, timestamp))
+>>>>>>> 2547730fac3e24d7d2caa31aab45b67efaf40cf8
             try:
                 self.mfiles.remove(filename)
             except KeyError:
