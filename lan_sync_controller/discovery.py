@@ -85,9 +85,11 @@ def scan_and_get_neighbors(net, interface, port, timeout=1):
             LOG.info('Scan tcp port - ip: %s - %s' % (port, _valid_ip))
             port_rs = scan_tcp_port(_valid_ip, port)
             LOG.info('Scan tcp port result: %s' % port_rs)
-            if (port_rs == 'Open') and (_valid_ip not in SYNC_SERVERS):
-                auth_info = get_user_and_pwd(_valid_ip)
-                SYNC_SERVERS.append((auth_info[1], _valid_ip, port))
+            VALID_IPS = [server[1] for server in SYNC_SERVERS]
+            if (port_rs == 'Open') and(_valid_ip not in VALID_IPS):
+                # auth_info = get_user_and_pwd(_valid_ip)
+                # SYNC_SERVERS.append((auth_info[1], _valid_ip, port))
+                SYNC_SERVERS.append(('1', _valid_ip, port))
     except socket.error as e:
         if e.errno == errno.EPERM:
             LOG.error('%s. Did you run as root?' % (e.strerror))
