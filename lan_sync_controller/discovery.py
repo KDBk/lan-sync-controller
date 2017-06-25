@@ -14,9 +14,7 @@ from scapy.all import *
 from lan_sync_controller.config_loader import SETTINGS
 
 LOG = logging.getLogger(__name__)
-
-
-SYNC_SERVERS = list()
+SCANNED_SERVERS = dict()
 
 
 def long2net(arg):
@@ -82,14 +80,27 @@ def scan_and_get_neighbors(net, interface, port, timeout=1):
                                             verbose=False)
         for s, r in ans.res:
             _valid_ip = r.sprintf('%ARP.psrc%')
+            if _valid_ip == '172.17.0.1':
+                continue
             LOG.info('Scan tcp port - ip: %s - %s' % (port, _valid_ip))
             port_rs = scan_tcp_port(_valid_ip, port)
             LOG.info('Scan tcp port result: %s' % port_rs)
-            VALID_IPS = [server[1] for server in SYNC_SERVERS]
-            if (port_rs == 'Open') and(_valid_ip not in VALID_IPS):
-                # auth_info = get_user_and_pwd(_valid_ip)
-                # SYNC_SERVERS.append((auth_info[1], _valid_ip, port))
-                SYNC_SERVERS.append(('1', _valid_ip, port))
+            global SCANNED_SERVERS
+            if port_rs == 'Open':
+                if _valid_ip not in SCANNED_SERVERS.keys():
+                    # NOTE(kiennt): if host is not detected in the previous
+                    #               scan, this will be a new host -> get auth.
+                    # auth_info = get_user_and_pwd(_valid_ip)
+                    # SCANNED_SERVERS = {
+                    #     'state': 1,
+                    #     'info': (auth_info[1], _valid_ip, port)
+                    # }
+                    SCANNED_SERVERS[_valid_ip] = {
+                        'state': 1,
+                        'info': (('1', _valid_ip, port))
+                    }
+                else:
+                    SCANNED_SERVERS[_valid_ip]['state'] = 1
     except socket.error as e:
         if e.errno == errno.EPERM:
             LOG.error('%s. Did you run as root?' % (e.strerror))
@@ -142,6 +153,12 @@ class NeighborsDetector(object):
 
     def get_all_neighbors(self):
         """Get All Available Neighbors in LAN"""
+        # Reset all detected hosts state.
+        global SCANNED_SERVERS
+        if SCANNED_SERVERS:
+            for server in SCANNED_SERVERS.values():
+                server['state'] = 0
+
         LOG.info('Start get_all_neighbors at %s' % datetime.now())
         for network, netmask, _, interface, address in \
                 scapy.config.conf.route.routes:
@@ -165,4 +182,5 @@ class NeighborsDetector(object):
 
             if net:
                 scan_and_get_neighbors(net, interface, self.port)
+        LOG.info(SCANNED_SERVERS)
         LOG.info('End get_all_neighbors at %s' % datetime.now())

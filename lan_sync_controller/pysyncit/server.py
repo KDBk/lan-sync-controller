@@ -76,7 +76,9 @@ class Server(Node):
     def __init__(self, username, port, watch_dirs, servers):
         super(Server, self).__init__(username, port, watch_dirs)
         self.servers = servers
-        self.mfiles = FilesPersistentSet(pkl_filename='{}/node.pkl' .format(DIR_PATH))  # set() #set of modified files
+        # set() #set of modified files
+        self.mfiles = FilesPersistentSet(
+            pkl_filename='{}/node.pkl' .format(DIR_PATH))
         self.rfiles = set()  # set of removed filess
         self.pulled_files = set()
         self.server_available = True
@@ -99,7 +101,8 @@ class Server(Node):
         my_file = "{}{}".format(self.watch_dirs[0], filename)
         server_filename = my_file
 
-        logger.debug("server filename %s returned for file %s", server_filename, filename)
+        logger.debug("server filename %s returned for file %s",
+                     server_filename, filename)
         try:
             mtime_server = os.stat(server_filename).st_mtime
         except Exception as e:
@@ -114,19 +117,24 @@ class Server(Node):
                 time.sleep(10)
                 for filedata in mfiles.list():
                     filename = filedata.name
+                    # NOTE(kiennt): Just naming, dont be confused.
+                    #               Get all available servers (state = 1).
+                    avail_servers = [server['info'] for server in
+                                     self.servers.values() if server['state'] == 1]
                     # Skip if can't find any servers.
-                    if not filename or len(self.servers) == 0:
+                    if not filename or len(avail_servers) == 0:
                         continue
                     if '.swp' in filename:
                         mfiles.remove(filename)
                         continue
-                    for server in self.servers:
+                    for server in avail_servers:
                         logger.info('push filedata object {} to server {}' .
                                     format(filedata, server))
                         passwd, server_ip, server_port = server
                         # Add by daidv, only send file name alter for full path file to server
                         filedata_name = self.format_file_name(filedata.name)
-                        server_return = rpc.req_push_file(server_ip, server_port, filedata_name)
+                        server_return = rpc.req_push_file(
+                            server_ip, server_port, filedata_name)
                         if server_return:
                             server_uname, dest_file, mtime_server = server_return
                         else:
@@ -139,7 +147,8 @@ class Server(Node):
                             continue
                         if dest_file is None:
                             continue
-                        push_status = self.push_file(filename, dest_file, passwd, server_uname, server_ip)
+                        push_status = self.push_file(
+                            filename, dest_file, passwd, server_uname, server_ip)
                         if (push_status < 0):
                             continue
                     mfiles.remove(filename)
@@ -158,18 +167,21 @@ class Server(Node):
 
             for filename in filenames:
                 file_path = os.path.join(dirname, filename)
-                logger.debug("checked file if modified before client was running: %s", file_path)
+                logger.debug(
+                    "checked file if modified before client was running: %s", file_path)
                 mtime = os.path.getmtime(file_path)
                 # TODO save and restore last_synctime
                 if mtime > self.mfiles.get_modified_timestamp():
-                    logger.debug("modified before client was running %s", file_path)
+                    logger.debug(
+                        "modified before client was running %s", file_path)
                     self.mfiles.add(file_path, mtime)
 
     def watch_files(self):
         """keep a watch on files present in sync directories"""
         ob = Observer()
         # watched events
-        ob.schedule(Handler(self.mfiles, self.rfiles, self.pulled_files), self.watch_dirs[0])
+        ob.schedule(Handler(self.mfiles, self.rfiles,
+                            self.pulled_files), self.watch_dirs[0])
         ob.start()
         logger.debug("watched dir %s", self.watch_dirs)
         try:
