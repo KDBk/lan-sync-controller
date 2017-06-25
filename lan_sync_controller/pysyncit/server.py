@@ -75,7 +75,8 @@ class Server(Node):
         self.mfiles = FilesPersistentSet(pkl_filename='{}/node.pkl' .format(DIR_PATH))  # set() #set of modified files
 
     def event(self, filename, timestamp, event_type, serverip):
-        self.mfiles.add(filename, timestamp, event_type, serverip)
+        if serverip != self.ip:
+            self.mfiles.add(filename, timestamp, event_type, serverip)
 
     def pull_file(self, filename, dest_file, passwd, dest_uname, dest_ip):
         """Pull file 'filename' to the destination"""
