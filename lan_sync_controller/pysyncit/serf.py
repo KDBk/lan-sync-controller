@@ -45,11 +45,6 @@ def main():
 		result = os.getenv('SERF_USER_EVENT', '|||')
 		name, filename, timestamp, serverip = result.split('|')
 		event('9696', filename, timestamp, name, serverip)
-		# print(os.environ)
-		# print(os.getenv('SERF_EVENT', '2')) # type of event
-		# print(os.getenv('SERF_SELF_NAME', '2')) # name of serf node
-		# print(os.getenv('SERF_USER_EVENT', '3')) # event name
-		# print(sys.argv)
 
 
 if __name__ == '__main__':
