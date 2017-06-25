@@ -47,21 +47,18 @@ class Handler(FileSystemEventHandler):
         elif event.event_type == 'created':
             filename = event.src_path
             timestamp = time.time()
-            self.mfiles.add(filename, timestamp, 'created')
             client.event('created|{}|{}|{}'.format(filename, timestamp, self.ip))
             logger.info("Created file: %s", filename)
 
         elif event.event_type == 'modified':
             filename = event.src_path
             timestamp = time.time()
-            self.mfiles.add(filename, timestamp, 'modified')
             client.event('modified|{}|{}|{}'.format(filename, timestamp, self.ip))
             logger.info("Modified file: %s", filename)
 
         elif event.event_type == 'deleted':
             filename = event.src_path
             timestamp = time.time()
-            self.mfiles.add(filename, timestamp, 'deleted')
             client.event('deleted|{}|{}|{}'.format(filename, timestamp, self.ip))
             try:
                 self.mfiles.remove(filename)
@@ -78,7 +75,6 @@ class Server(Node):
         self.mfiles = FilesPersistentSet(pkl_filename='{}/node.pkl' .format(DIR_PATH))  # set() #set of modified files
 
     def event(self, filename, timestamp, event_type, serverip):
-        print("CALL EVENT: {} {} {} {}" .format(filename, timestamp, event_type, serverip))
         self.mfiles.add(filename, timestamp, event_type, serverip)
 
     def pull_file(self, filename, dest_file, passwd, dest_uname, dest_ip):
@@ -107,7 +103,6 @@ class Server(Node):
                 time.sleep(10)
                 # TODO(daidv): Do someting like summary list mfiles, compare and return list action
                 for filedata in mfiles.list():
-                    print(filedata)
                     filename = filedata.name
                     serverip = filedata.serverip
                     if not filename:
@@ -148,7 +143,7 @@ class Server(Node):
                 # TODO save and restore last_synctime
                 if mtime > self.mfiles.get_modified_timestamp():
                     logger.debug("modified before client was running %s", file_path)
-                    self.mfiles.add(file_path, mtime)
+                    client.event('modified|{}|{}|{}'.format(filename, mtime, self.ip))
 
     def watch_files(self):
         """keep a watch on files present in sync directories"""

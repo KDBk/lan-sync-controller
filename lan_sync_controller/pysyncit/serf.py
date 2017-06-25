@@ -41,11 +41,12 @@ def event(port, filename, timestamp, event_type, serverip):
 
 
 def main():
-	if os.getenv('SERF_EVENT', 'default') == 'user':
-		result = os.getenv('SERF_USER_EVENT', '|||')
-		name, filename, timestamp, serverip = result.split('|')
-		event('9696', filename, timestamp, name, serverip)
+    if os.getenv('SERF_EVENT', 'default') == 'user':
+        result = os.getenv('SERF_USER_EVENT', '|||')
+        event_type, filename, timestamp, serverip = result.split('|')
+        print("{} {} {} {}".format(event_type, filename, timestamp, serverip))
+        event('9696', filename, timestamp, event_type, serverip)
 
 
 if __name__ == '__main__':
-	main()
+    main()

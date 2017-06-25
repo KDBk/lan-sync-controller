@@ -7,7 +7,7 @@ __author__ = 'dushyant'
 
 class FileData(object):
 
-    def __init__(self, file_name, timestamp, serverip, event_type):
+    def __init__(self, file_name, timestamp, event_type, serverip):
         self.name = file_name
         self.timestamp = timestamp
         self.serverip = serverip
@@ -75,7 +75,7 @@ class FilesPersistentSet(PersistentSet):
     def __init__(self, pkl_filename):
         super(FilesPersistentSet, self).__init__(pkl_filename)
 
-    def add(self, file_name, timestamp, event_type=None, serverip='127.0.0.1'):
+    def add(self, file_name, timestamp, event_type, serverip):
         super(FilesPersistentSet, self).add(FileData(
             file_name, timestamp, event_type, serverip))
 
