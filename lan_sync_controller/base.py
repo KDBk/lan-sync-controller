@@ -136,6 +136,7 @@ class BaseDaemon(object):
         Restart the daemon
         """
         self.stop()
+        time.sleep(5)
         self.start()
 
     def run(self):
