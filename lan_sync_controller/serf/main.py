@@ -17,7 +17,7 @@ LOG = logging.getLogger(__name__)
 
 def get_local_addresses():
     """Get local addresses"""
-    return [x[4] for x in scapy.all.conf.route.routes if x[2] != '0.0.0.0'][0]
+    return [x[4] for x in scapy.all.conf.route.routes if x[2] != '0.0.0.0']
 
 
 def safe_rpc(fn):
@@ -41,10 +41,11 @@ def safe_rpc(fn):
 
 
 @safe_rpc
-def event(port, filename, timestamp, even_type, serverip):
+def event(port, filename, timestamp, event_type, serverip):
     if serverip not in get_local_addresses():
         url = 'http://%s:%s/' % ('localhost', port)
         rpc_connect = xmlrpclib.ServerProxy(url, allow_none=True)
+        return rpc_connect.event(filename, timestamp, event_type, serverip)
     else:
         pass
 
