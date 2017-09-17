@@ -47,7 +47,7 @@ def event(port, filename, timestamp, event_type, serverip):
         rpc_connect = xmlrpclib.ServerProxy(url, allow_none=True)
         return rpc_connect.event(filename, timestamp, event_type, serverip)
     else:
-        pass
+        return None
 
 
 def main():

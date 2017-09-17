@@ -80,10 +80,12 @@ class Server(Node):
         command = "{} -q -p -l {} -pw {} {}@{}:{} {}".format(
             PSCP_COMMAND[ENV], self.username, passwd,
             dest_uname, dest_ip, dest_file, filename).split()
-        rsync_command = 'rsync -avz --progress -l {} {}@{}:{} {}' . format(
-            self.username, dest_uname, dest_ip, dest_file, filename).split()
+        # MUST COPY SSH ID_RSA PUB TO ANOTHER HOST (FUCK)
+        rsync_command = 'rsync -avz --progress -e \'ssh -i ~/.ssh/id_rsa\' {}@{}:{} {}' . format(
+            dest_uname, dest_ip, dest_file, filename).split()
 
-        proc = subprocess.Popen(rsync_command, stdout=PIPE, stderr=PIPE, stdin=PIPE)
+        proc = subprocess.Popen(
+            rsync_command, stdout=PIPE, stderr=PIPE, stdin=PIPE)
         proc.stdin.write('y')
         pull_status = proc.wait()
         LOG.debug("returned status %s", pull_status)
