@@ -80,9 +80,10 @@ class Server(Node):
         command = "{} -q -p -l {} -pw {} {}@{}:{} {}".format(
             PSCP_COMMAND[ENV], self.username, passwd,
             dest_uname, dest_ip, dest_file, filename).split()
-        rsync_command = 'rsync -avz --progress local/path/some_file usr@server.com:"/some/path/"'
-        print(command)
-        proc = subprocess.Popen(command, stdout=PIPE, stderr=PIPE, stdin=PIPE)
+        rsync_command = 'rsync -avz --progress {} {}@{}:{}' . format(
+            filename, dest_uname, dest_ip, dest_file)
+
+        proc = subprocess.Popen(rsync_command, stdout=PIPE, stderr=PIPE, stdin=PIPE)
         proc.stdin.write('y')
         pull_status = proc.wait()
         LOG.debug("returned status %s", pull_status)
