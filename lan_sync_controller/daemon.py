@@ -25,7 +25,8 @@ class LANSyncDaemon(base.BaseDaemon):
         username = SETTINGS['default-user']
         port = int(SETTINGS['default-port'])
         watch_dirs = [SETTINGS['default-syncdir']]
-        node = Server(username, port, watch_dirs, SCANNED_SERVERS)
+        ip = SETTINGS['default-ip']
+        node = Server(username, ip, port, watch_dirs)
         # Have to active before start detect valid host
         # to open port.
         node.activate()
