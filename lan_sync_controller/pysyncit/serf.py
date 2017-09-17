@@ -6,7 +6,8 @@ import logging
 import socket
 import errno
 import xmlrpclib
-import logging
+
+from lan_sync_controller.config_loader import SETTINGS
 
 
 __author__ = 'dushyant'
@@ -36,7 +37,9 @@ def safe_rpc(fn):
 
 @safe_rpc
 def event(port, filename, timestamp, event_type, serverip):
-    rpc_connect = xmlrpclib.ServerProxy("http://%s:%s/"% ('localhost', port), allow_none=True)
+    if serverip == SETTINGS['default']['ip']:
+        continue
+    rpc_connect = xmlrpclib.ServerProxy("http://%s:%s/"% (SETTINGS['default']['ip'], port), allow_none=True)
     return rpc_connect.event(filename, timestamp, event_type, serverip)
 
 
