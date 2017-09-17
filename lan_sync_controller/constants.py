@@ -15,3 +15,6 @@ DROPBOX = ['dropbox', 'Dropbox', 'DROPBOX']
 
 # Googledrive processname
 GGDRIVE = ['googledrivesync']
+
+# PSCP Command
+PSCP_COMMAND = {'Linux': 'pscp', 'Windows': 'C:\pscp.exe'}
