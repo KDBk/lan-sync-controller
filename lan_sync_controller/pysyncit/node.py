@@ -41,9 +41,10 @@ class Node(object):
         :return:
         """
         if file_name:
-            for di in self.watch_dirs:
-                if di in file_name:
-                    return file_name.replace(di, '')
+	     return file_name.split("/").pop()
+        #    for di in self.watch_dirs:
+        #        if di in file_name:
+        #            return file_name.replace(di, '')
         else:
             return None
 

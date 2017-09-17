@@ -118,10 +118,10 @@ class Server(Node):
                         server_uname, dest_file = server_return
                     else:
                         continue
-                    logger.info("destination file name %s", dest_file)
+                    logger.info("destination file name {} {} {}".format(dest_file, filedata_name, filedata.name))
                     if dest_file is None:
                         continue
-                    pull_status = self.pull_file(filename, dest_file, '1', server_uname, serverip)
+                    pull_status = self.pull_file("{}{}".format(self.watch_dirs[0], filedata_name), dest_file, '123456', server_uname, serverip)
                     if pull_status < 0:
                         continue
                     mfiles.remove(filename)

@@ -8,7 +8,6 @@ import socket
 import scapy.config
 import scapy.layers.l2
 import scapy.route
-from easygui import multpasswordbox
 from scapy.all import *
 
 from lan_sync_controller.config_loader import SETTINGS
@@ -35,35 +34,6 @@ def to_CIDR_notation(bytes_network, bytes_netmask):
         return None
 
     return net
-
-
-def get_user_and_pwd(host_ip):
-    msg = 'Enter login information of host %s' % host_ip
-    title = 'Login'
-    field_names = ['Username', 'Password']
-    # Start with blanks for the values
-    field_values = list()
-    field_values = multpasswordbox(msg, title, field_names)
-
-    # make sure that none of the fields was lelf blank
-    while True:
-        if not field_values:
-            break
-        errmsg = ''
-        for i in range(len(field_names)):
-            if field_values[i].strip() == '':
-                errmsg = errmsg + ('"%s" is a required field.\
-                                  \n\n' % field_names[i])
-        if errmsg == '':
-            break
-        field_values = multpasswordbox(errmsg, title,
-                                       field_names,
-                                       field_values)
-    LOG.info('Auth info of host %s: %s -%s' % (host_ip,
-                                               field_values[0],
-                                               field_values[1]))
-    # TODO (kiennt): Verify auth info
-    return field_values
 
 
 def scan_and_get_neighbors(net, interface, port, timeout=1):
