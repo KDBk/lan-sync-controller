@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 import errno
 import logging
 import os
@@ -7,6 +9,7 @@ import xmlrpclib
 
 import scapy.all
 
+sys.path.insert(0, os.getcwd())
 from lan_sync_controller.config_loader import SETTINGS
 
 LOG = logging.getLogger(__name__)
@@ -39,10 +42,11 @@ def safe_rpc(fn):
 
 @safe_rpc
 def event(port, filename, timestamp, even_type, serverip):
-    if serverip in get_local_addresses():
-        continue
-    url = 'http://%s:%s/' % ('localhost', port)
-    rpc_connect = xmlrpclib.ServerProxy(url, allow_none=True)
+    if serverip not in get_local_addresses():
+        url = 'http://%s:%s/' % ('localhost', port)
+        rpc_connect = xmlrpclib.ServerProxy(url, allow_none=True)
+    else:
+        pass
 
 
 def main():
