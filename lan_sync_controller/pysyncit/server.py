@@ -2,19 +2,12 @@ import errno
 import logging
 import os
 import re
-import time
-
-# import config
-import rpc
-from node import Node
-
-import logging
-import os
 import platform
 import subprocess
 import threading
 import time
 
+from serfclient.client import SerfClient
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
@@ -26,62 +19,56 @@ from lan_sync_controller.constants import DIR_PATH
 __author__ = 'dushyant'
 __updater__ = 'daidv'
 
-logger = logging.getLogger('syncIt')
+LOG = logging.getLogger(__name__)
 PSCP_COMMAND = {'Linux': 'pscp', 'Windows': 'C:\pscp.exe'}
 ENV = platform.system()
 PIPE = subprocess.PIPE
+client = SerfClient()
 
 
 class Handler(FileSystemEventHandler):
-    def __init__(self, mfiles, rfiles, pulledfiles):
+    def __init__(self, mfiles, ip):
         self.mfiles = mfiles
-        self.rfiles = rfiles
-        self.pulled_files = pulledfiles
+        self.ip = ip
 
-    # @staticmethod
     def on_any_event(self, event):
         if event.is_directory:
             return None
 
         elif event.event_type == 'created':
             filename = event.src_path
-            if not self.pulled_files.__contains__(filename):
-                self.mfiles.add(filename, time.time())
-                logger.info("Created file: %s", filename)
-            else:
-                pass
-                self.pulled_files.remove(filename)
+            client.event('created|%s|%s|%s' % (filename, time.time(), self.ip))
+            LOG.info("Created file: %s", filename)
 
         elif event.event_type == 'modified':
             filename = event.src_path
-            if not self.pulled_files.__contains__(filename):
-                self.mfiles.add(filename, time.time())
-                logger.info("Modified file: %s", filename)
-            else:
-                self.pulled_files.remove(filename)
+            client.event('modified|%s|%s|%s' % (filename, time.time(),
+                                                self.ip))
+            LOG.info("Modified file: %s", filename)
 
         elif event.event_type == 'deleted':
             filename = event.src_path
-            self.rfiles.add(filename)
+            client.event('deleted|%s|%s|%s' % (filename, time.time(),
+                                               self.ip))
             try:
                 self.mfiles.remove(filename)
             except KeyError:
                 pass
-            logger.info("Removed file: %s", filename)
+            LOG.info("Removed file: %s", filename)
 
 
 class Server(Node):
     """Server class"""
 
-    def __init__(self, username, port, watch_dirs, servers):
+    def __init__(self, username, port, watch_dirs):
         super(Server, self).__init__(username, port, watch_dirs)
-        self.servers = servers
-        # set() #set of modified files
-        self.mfiles = FilesPersistentSet(
-            pkl_filename='{}/node.pkl' .format(DIR_PATH))
-        self.rfiles = set()  # set of removed filess
-        self.pulled_files = set()
-        self.server_available = True
+        self.mfiles = FilesPersistentSet(pkl_filename='%s/node.pkl' % DIR_PATH)
+
+    def event(self, filename, timestamp, event_type, serverip):
+        # This check works well if machine have only 1 interface - 1 ip.
+        # If more, it may be wrong
+        if serverip != self.ip:
+            self.mfiles.add(filename, timestamp, event_type, serverip)
 
     def push_file(self, filename, dest_file, passwd, dest_uname, dest_ip):
         """push file 'filename' to the destination"""
@@ -92,17 +79,17 @@ class Server(Node):
         proc = subprocess.Popen(command, stdout=PIPE, stderr=PIPE, stdin=PIPE)
         proc.stdin.write('y')
         push_status = proc.wait()
-        logger.debug("returned status %s", push_status)
+        LOG.debug("returned status %s", push_status)
         return push_status
 
     def req_push_file(self, filename):
         """Mark this file as to be notified to clients - this file 'filename' has been modified, pull the latest copy"""
-        logger.debug("server filedata %s", filename)
+        LOG.debug("server filedata %s", filename)
         my_file = "{}{}".format(self.watch_dirs[0], filename)
         server_filename = my_file
 
-        logger.debug("server filename %s returned for file %s",
-                     server_filename, filename)
+        LOG.debug("server filename %s returned for file %s",
+                  server_filename, filename)
         try:
             mtime_server = os.stat(server_filename).st_mtime
         except Exception as e:
@@ -128,8 +115,8 @@ class Server(Node):
                         mfiles.remove(filename)
                         continue
                     for server in avail_servers:
-                        logger.info('push filedata object {} to server {}' .
-                                    format(filedata, server))
+                        LOG.info('push filedata object {} to server {}' .
+                                 format(filedata, server))
                         passwd, server_ip, server_port = server
                         # Add by daidv, only send file name alter for full path file to server
                         filedata_name = self.format_file_name(filedata.name)
@@ -139,7 +126,7 @@ class Server(Node):
                             server_uname, dest_file, mtime_server = server_return
                         else:
                             continue
-                        logger.info("destination file name %s", dest_file)
+                        LOG.info("destination file name %s", dest_file)
                         mtime_client = os.stat(filename).st_mtime
                         print(mtime_server, mtime_client)
                         if float(mtime_server) >= float(mtime_client):
@@ -167,12 +154,12 @@ class Server(Node):
 
             for filename in filenames:
                 file_path = os.path.join(dirname, filename)
-                logger.debug(
+                LOG.debug(
                     "checked file if modified before client was running: %s", file_path)
                 mtime = os.path.getmtime(file_path)
                 # TODO save and restore last_synctime
                 if mtime > self.mfiles.get_modified_timestamp():
-                    logger.debug(
+                    LOG.debug(
                         "modified before client was running %s", file_path)
                     self.mfiles.add(file_path, mtime)
 
@@ -183,7 +170,7 @@ class Server(Node):
         ob.schedule(Handler(self.mfiles, self.rfiles,
                             self.pulled_files), self.watch_dirs[0])
         ob.start()
-        logger.debug("watched dir %s", self.watch_dirs)
+        LOG.debug("watched dir %s", self.watch_dirs)
         try:
             while True:
                 time.sleep(5)
@@ -197,7 +184,7 @@ class Server(Node):
         watch_thread = threading.Thread(target=self.watch_files)
         watch_thread.setDaemon(True)
         watch_thread.start()
-        logger.info("Thread 'watchfiles' started ")
+        LOG.info("Thread 'watchfiles' started ")
 
     def activate(self):
         """ Activate Server Node """

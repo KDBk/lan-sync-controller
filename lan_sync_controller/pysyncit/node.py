@@ -10,7 +10,7 @@ __author__ = 'dushyant'
 __updater__ = 'daidv'
 
 
-logger = logging.getLogger('syncIt')
+LOG = logging.getLogger(__name__)
 
 
 class Handler(SimpleXMLRPCRequestHandler):
@@ -27,8 +27,9 @@ class Handler(SimpleXMLRPCRequestHandler):
 class Node(object):
     """Base class for client and server"""
 
-    def __init__(self, username, port, watch_dirs):
+    def __init__(self, username, ip, port, watch_dirs):
         self.username = username
+        self.ip = ip
         self.port = int(port)
         self.watch_dirs = watch_dirs
 
@@ -40,9 +41,7 @@ class Node(object):
         :return:
         """
         if file_name:
-            for di in self.watch_dirs:
-                if di in file_name:
-                    return file_name.replace(di, '')
+            return file_name.split('/').pop()
         else:
             return None
 
@@ -58,24 +57,25 @@ class Node(object):
 
     def start_server(self):
         """Start RPC Server on each node """
-        server = SimpleXMLRPCServer(("0.0.0.0", self.port), allow_none =True)
+        server = SimpleXMLRPCServer(("0.0.0.0", self.port), allow_none=True)
         server.register_instance(self)
         server.register_introspection_functions()
         rpc_thread = threading.Thread(target=server.serve_forever)
         rpc_thread.setDaemon(True)
         rpc_thread.start()
-        logger.debug("server functions on rpc %s", server.funcs.items())
-        logger.info("Started RPC server thread. Listening on port %s..." , self.port)
+        LOG.debug("server functions on rpc %s", server.funcs.items())
+        LOG.info(
+            "Started RPC server thread. Listening on port %s...", self.port)
 
     def start_sync_thread(self):
         # Sync file to itself server
-        sync_to_server_thread = threading.Thread(target=self.sync_files_to_server)
+        sync_to_server_thread = threading.Thread(
+            target=self.sync_files_to_server)
         sync_to_server_thread.setDaemon(True)
         sync_to_server_thread.start()
-        logger.info("Thread 'syncfiles' started ")
+        LOG.info("Thread 'syncfiles' started ")
 
     def activate(self):
         self.ensure_dir()
         self.start_sync_thread()
         self.start_server()
-
