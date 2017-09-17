@@ -42,10 +42,10 @@ def event(port, filename, timestamp, even_type, serverip):
     if serverip in get_local_addresses():
         continue
     url = 'http://%s:%s/' % ('localhost', port)
-    rpc_connect = xmlrpclib.ServerProxy(url, allow_none=1)
+    rpc_connect = xmlrpclib.ServerProxy(url, allow_none=True)
 
 
-def main()
+def main():
     if os.getenv('SERF_EVENT', 'default') == 'user':
         result = os.getenv('SERF_USER_EVENT', '|||')
         event_type, filename, timestamp, serverip = result.split('|')
