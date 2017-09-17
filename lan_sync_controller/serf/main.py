@@ -37,7 +37,7 @@ def safe_rpc(fn):
     return safe_fn
 
 
-@safe_rpà
+@safe_rpc
 def event(port, filename, timestamp, even_type, serverip):
     if serverip in get_local_addresses():
         continue
