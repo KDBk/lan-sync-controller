@@ -50,7 +50,7 @@ def main()
         result = os.getenv('SERF_USER_EVENT', '|||')
         event_type, filename, timestamp, serverip = result.split('|')
         LOG.info('Result: %s', result)
-        event(SETTINGS['default']['port'], filename, timestamp,
+        event(SETTINGS['default-port'], filename, timestamp,
               event_type, serverip)
 
 

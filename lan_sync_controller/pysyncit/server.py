@@ -80,6 +80,7 @@ class Server(Node):
         command = "{} -q -p -l {} -pw {} {}@{}:{} {}".format(
             PSCP_COMMAND[ENV], self.username, passwd,
             dest_uname, dest_ip, dest_file, filename).split()
+        rsync_command = 'rsync -avz --progress local/path/some_file usr@server.com:"/some/path/"'
         print(command)
         proc = subprocess.Popen(command, stdout=PIPE, stderr=PIPE, stdin=PIPE)
         proc.stdin.write('y')
@@ -97,7 +98,7 @@ class Server(Node):
     def sync_files_to_server(self):
         """Sync all the files present in the mfiles set and push this set"""
         mfiles = self.mfiles
-        passwd = SETTINGS['default']['password']
+        passwd = SETTINGS['default-password']
         while True:
             try:
                 time.sleep(10)
