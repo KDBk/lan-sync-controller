@@ -24,13 +24,13 @@ __updater__ = 'daidv'
 LOG = logging.getLogger(__name__)
 ENV = platform.system()
 PIPE = subprocess.PIPE
-client = SerfClient()
 
 
 class Handler(FileSystemEventHandler):
     def __init__(self, mfiles, ip):
         self.mfiles = mfiles
         self.ip = ip
+        self.client = SerfClient()
 
     def on_any_event(self, event):
         if event.is_directory:
@@ -40,21 +40,21 @@ class Handler(FileSystemEventHandler):
         elif event.event_type == 'created':
             filename = event.src_path
             timestamp = time.time()
-            client.event('created|{}|{}|{}'.format(
+            self.client.event('created|{}|{}|{}'.format(
                 filename, timestamp, self.ip))
             LOG.info("Created file: %s", filename)
 
         elif event.event_type == 'modified':
             filename = event.src_path
             timestamp = time.time()
-            client.event('modified|{}|{}|{}'.format(
+            self.client.event('modified|{}|{}|{}'.format(
                 filename, timestamp, self.ip))
             LOG.info("Modified file: %s", filename)
 
         elif event.event_type == 'deleted':
             filename = event.src_path
             timestamp = time.time()
-            client.event('deleted|{}|{}|{}'.format(
+            self.client.event('deleted|{}|{}|{}'.format(
                 filename, timestamp, self.ip))
             try:
                 self.mfiles.remove(filename)
@@ -71,6 +71,7 @@ class Server(Node):
         # set() #set of modified files
         self.mfiles = FilesPersistentSet(
             pkl_filename='{}/node.pkl' .format(DIR_PATH))
+        self.client = SerfClient()
 
     def event(self, filename, timestamp, event_type, serverip):
         if serverip != self.ip:
@@ -154,7 +155,7 @@ class Server(Node):
                 if mtime > self.mfiles.get_modified_timestamp():
                     LOG.debug(
                         "modified before client was running %s", file_path)
-                    client.event('modified|{}|{}|{}'.format(
+                    self.client.event('modified|{}|{}|{}'.format(
                         filename, mtime, self.ip))
 
     def watch_files(self):

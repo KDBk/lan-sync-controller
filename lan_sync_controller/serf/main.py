@@ -9,9 +9,10 @@ import xmlrpclib
 
 import scapy.all
 
-sys.path.insert(0, os.getcwd())
-from lan_sync_controller.config_loader import SETTINGS
+# sys.path.insert(0, os.getcwd())
+# from lan_sync_controller.config_loader import SETTINGS
 
+DEFAULT_PORT = '2609'
 LOG = logging.getLogger(__name__)
 
 
@@ -55,7 +56,7 @@ def main():
         result = os.getenv('SERF_USER_EVENT', '|||')
         event_type, filename, timestamp, serverip = result.split('|')
         LOG.info('Result: %s', result)
-        event(SETTINGS['default-port'], filename, timestamp,
+        event(DEFAULT_PORT, filename, timestamp,
               event_type, serverip)
 
 
