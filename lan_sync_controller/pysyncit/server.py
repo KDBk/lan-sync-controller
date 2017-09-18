@@ -35,7 +35,8 @@ class Handler(FileSystemEventHandler):
     def on_any_event(self, event):
         if event.is_directory:
             return None
-
+        elif event.src_path.split('/').pop().startswith('.'):
+            pass
         elif event.event_type == 'created':
             filename = event.src_path
             timestamp = time.time()
@@ -81,15 +82,16 @@ class Server(Node):
             PSCP_COMMAND[ENV], self.username, passwd,
             dest_uname, dest_ip, dest_file, filename).split()
         # MUST COPY SSH ID_RSA PUB TO ANOTHER HOST (FUCK)
-        rsync_command = 'rsync -avz --progress -e \'ssh -i ~/.ssh/id_rsa\' {}@{}:{} {}' . format(
-            dest_uname, dest_ip, dest_file, filename).split()
-
+        ssh_private_key = '/home/%s/.ssh/id_rsa' % self.username
+        rsync_path = DIR_PATH + '/run_rsync.sh'
+        rsync_command = 'bash {} {} {} {} {} {}' . format(
+            rsync_path, ssh_private_key, dest_uname,
+            dest_ip, dest_file, filename).split()
+        LOG.info(rsync_command)
         proc = subprocess.Popen(
             rsync_command, stdout=PIPE, stderr=PIPE, stdin=PIPE)
-        proc.stdin.write('y')
-        pull_status = proc.wait()
-        LOG.debug("returned status %s", pull_status)
-        return pull_status
+        output, error = proc.communicate()
+        LOG.info("Communicate log: {} {}".format(output, error))
 
     def req_pull_file(self, filename):
         my_file = "{}{}".format(self.watch_dirs[0], filename)
@@ -108,14 +110,16 @@ class Server(Node):
                 # TODO(daidv): Do someting like summary list mfiles, compare and return list action
                 for filedata in mfiles.list():
                     filename = filedata.name
+                    mfiles.remove(filename)
                     serverip = filedata.serverip
                     if not filename:
                         continue
                     if '.swp' in filename:
-                        mfiles.remove(filename)
                         continue
                     # Add by daidv, only send file name alter for full path file to server
                     filedata_name = self.format_file_name(filedata.name)
+                    if filedata_name.startswith('.'):
+                        continue
                     server_return = rpc.req_pull_file(
                         serverip, self.port, filedata_name)
                     if server_return:
@@ -129,9 +133,6 @@ class Server(Node):
                     pull_status = self.pull_file("{}{}".format(
                         self.watch_dirs[0], filedata_name), dest_file, passwd,
                         server_uname, serverip)
-                    if pull_status < 0:
-                        continue
-                    mfiles.remove(filename)
             except KeyboardInterrupt:
                 break
 
