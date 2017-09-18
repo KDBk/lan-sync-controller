@@ -108,11 +108,11 @@ class Server(Node):
                 # TODO(daidv): Do someting like summary list mfiles, compare and return list action
                 for filedata in mfiles.list():
                     filename = filedata.name
+                    mfiles.remove(filename)
                     serverip = filedata.serverip
                     if not filename:
                         continue
                     if '.swp' in filename:
-                        mfiles.remove(filename)
                         continue
                     # Add by daidv, only send file name alter for full path file to server
                     filedata_name = self.format_file_name(filedata.name)
@@ -129,9 +129,8 @@ class Server(Node):
                     pull_status = self.pull_file("{}{}".format(
                         self.watch_dirs[0], filedata_name), dest_file, passwd,
                         server_uname, serverip)
-                    if pull_status < 0:
-                        continue
-                    mfiles.remove(filename)
+                    # if pull_status < 0:
+                    #     continue
             except KeyboardInterrupt:
                 break
 
