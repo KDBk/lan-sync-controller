@@ -58,14 +58,7 @@ class LANSyncDaemon(base.BaseDaemon):
         while True:
             # List valid hosts
             detector.get_all_neighbors()
-            # LOG.info('Current nodes:')
-            # LOG.info(node.servers)
-            # if len(node.servers) > 0 and prhandler.is_running():
-            #     # Turn off default sync app (GGDrive, etc)
-            #     prhandler.suspend()
-            # elif len(node.servers) == 0 and not prhandler.is_running() \
-            #         and exe:
-            #     start_application(exe)
+
             if SCANNED_SERVERS.keys():
                 random_server = SCANNED_SERVERS.keys()[0]
                 proc = subprocess.Popen(
