@@ -4,3 +4,4 @@ easygui
 watchdog==0.8.3
 serfclient
 python-swiftclient
+keystoneauth1
