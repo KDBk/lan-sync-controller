@@ -7,6 +7,7 @@ import psutil
 
 from lan_sync_controller import base
 from lan_sync_controller.config_loader import SETTINGS
+from lan_sync_controller.connector import MySQLConnector
 from lan_sync_controller.constants import DIR_PATH
 from lan_sync_controller.discovery import NeighborsDetector, SCANNED_SERVERS
 from lan_sync_controller.process_handler import ProcessHandler
@@ -23,11 +24,16 @@ class LANSyncDaemon(base.BaseDaemon):
     A daemon that runs the app in background
     """
 
+    def __init__(self, pidfile):
+        super(LANSyncDaemon, self).__init__()
+        self.mysql_connector = MySQLConnector()
+
     def stop(self):
         procs = [proc for proc in psutil.process_iter()
                  if 'serf' in proc.name()]
         for proc in procs:
             proc.kill()
+        self.mysql_connector.close()
         super(LANSyncDaemon, self).stop()
 
     def run(self):
