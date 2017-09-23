@@ -8,9 +8,6 @@ import subprocess
 import threading
 import time
 
-from keystoneauth1.identity import v3
-from keystoneauth1 import session
-from swiftclient.client import Connection
 from serfclient.client import SerfClient
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
@@ -33,7 +30,7 @@ class Handler(FileSystemEventHandler):
     def __init__(self, mfiles, ip):
         self.mfiles = mfiles
         self.ip = ip
-        self.serf_client = SerfClient()
+        self.client = SerfClient()
 
     def on_any_event(self, event):
         if event.is_directory:
@@ -43,21 +40,21 @@ class Handler(FileSystemEventHandler):
         elif event.event_type == 'created':
             filename = event.src_path
             timestamp = time.time()
-            self.serf_client.event('created|{}|{}|{}'.format(
+            self.client.event('created|{}|{}|{}'.format(
                 filename, timestamp, self.ip))
             LOG.info("Created file: %s", filename)
 
         elif event.event_type == 'modified':
             filename = event.src_path
             timestamp = time.time()
-            self.serf_client.event('modified|{}|{}|{}'.format(
+            self.client.event('modified|{}|{}|{}'.format(
                 filename, timestamp, self.ip))
             LOG.info("Modified file: %s", filename)
 
         elif event.event_type == 'deleted':
             filename = event.src_path
             timestamp = time.time()
-            self.serf_client.event('deleted|{}|{}|{}'.format(
+            self.client.event('deleted|{}|{}|{}'.format(
                 filename, timestamp, self.ip))
             try:
                 self.mfiles.remove(filename)
@@ -74,25 +71,7 @@ class Server(Node):
         # set() #set of modified files
         self.mfiles = FilesPersistentSet(
             pkl_filename='{}/node.pkl' .format(DIR_PATH))
-        self.serf_client = SerfClient()
-        self.swift_client = self._init_swift_client()
-
-    def _init_swift_client(self):
-        # Keystone Authentication
-        auth = v3.Password(
-            auth_url=SETTINGS['swift-os_auth_url'],
-            user_domain_name=SETTINGS['swift-os_user_domain_name'],
-            password=SETTINGS['swift-password'],
-            project_domain_name=SETTINGS['swift-os_project_domain_name'],
-            project_name=SETTINGS['swift-os_project_name']
-        )
-        sess = session.Session(auth=auth)
-        try:
-            # Use version 2
-            return Connection('2', session=sess)
-        except Exception as e:
-            LOG.exception('Connecting to Swift is failed!')
-            raise e
+        self.client = SerfClient()
 
     def event(self, filename, timestamp, event_type, serverip):
         if serverip != self.ip:
@@ -176,7 +155,7 @@ class Server(Node):
                 if mtime > self.mfiles.get_modified_timestamp():
                     LOG.debug(
                         "modified before client was running %s", file_path)
-                    self.serf_client.event('modified|{}|{}|{}'.format(
+                    self.client.event('modified|{}|{}|{}'.format(
                         filename, mtime, self.ip))
 
     def watch_files(self):
