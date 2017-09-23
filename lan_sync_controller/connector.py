@@ -2,6 +2,9 @@ import logging
 import time
 
 import pymysql
+from keystoneauth1.identity import v3
+from keystoneauth1 import session
+from swiftclient.client import Connection
 
 from lan_sync_controller.config_loader import SETTINGS
 
@@ -87,4 +90,27 @@ class MySQLConnector(object):
             self.commit()
         except Exception as e:
             LOG.exception('Fail to execute query: %s', query)
+            raise e
+
+
+class SwiftConnector(object):
+
+    def __init__(self):
+        self.connection = _init_swift_client(self)
+    
+    def _init_swift_client(self):
+        # Keystone Authentication
+        auth = v3.Password(
+            auth_url=SETTINGS['swift-os_auth_url'],
+            user_domain_name=SETTINGS['swift-os_user_domain_name'],
+            password=SETTINGS['swift-password'],
+            project_domain_name=SETTINGS['swift-os_project_domain_name'],
+            project_name=SETTINGS['swift-os_project_name']
+        )
+        sess = session.Session(auth=auth)
+        try:
+            # Use version 2
+            return Connection('2', session=sess)
+        except Exception as e:
+            LOG.exception('Connecting to Swift is failed!')
             raise e
