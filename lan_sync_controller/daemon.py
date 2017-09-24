@@ -2,6 +2,7 @@ import logging
 import time
 import uuid
 import subprocess
+import os
 
 import psutil
 
@@ -72,4 +73,13 @@ class LANSyncDaemon(base.BaseDaemon):
                     stdout=PIPE, stderr=PIPE, stdin=PIPE)
                 output, error = proc.communicate()
                 LOG.info("Serf join: {} {}".format(output, error))
+            
+            # Get list file and timestamp from master: [name, last_modified]
+            files = self.mysql_connector.get_files()
+            # Check local change vs master change and decide to download it into local
+            for _file in files:
+                filepath = "/".join(watch_dirs[0], _file[0])
+                local_modified_time = os.path.getmtime(filepath)
+                if local_modified_time < _file[1]:
+                    # File is out of dated, download it by SwiftConnector
             time.sleep(10)

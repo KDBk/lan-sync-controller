@@ -37,6 +37,27 @@ class MySQLConnector(object):
             LOG.exception('Connecting to database failed: %s', e)
             raise e
 
+    def cleaup_database(self):
+        drop_if_exist = "DROP TABLE IF EXISTS files;"
+        create_new_one = """
+            CREATE TABLE files (
+                id INT(6) AUTO_INCREMENT PRIMARY KEY
+                name TEXT NOT NULL,
+                size INT(30) NULL,
+                last_modified TIMESTAMP,
+                version INT(2)
+            )
+        """
+        try:
+            cursor = self.cursor()
+            LOG.info('Delete table FILES if it exists')
+            cursor.execute(drop_if_exist)
+            LOG.info('Recreate table FILES')
+            cursor.execute(create_new_one)
+        except Exception as e:
+            LOG.exception('Fail to cleanup database!')
+            raise e
+
     def __getattr__(self, key):
         return getattr(self.connection, key)
 
@@ -54,6 +75,19 @@ class MySQLConnector(object):
         except Exception as e:
             LOG.exception('Fail to execute query: %s', query)
             raise e
+
+    def get_files(self):
+        try:
+            LOG.info('Get all of files and their timlast_modifiede from server')
+            # Hardcore table name as files
+            query = "select name, last_modified from files"
+            cursor = self.cursor()
+            cursor.execute(query)
+            result = self.fetchall()
+        except Exception as e:
+            LOG.exception('Fail to execute query: %s', query)
+            raise e
+        return result
 
     def insert_new_file(self, filename, filesize,
                         last_modified, version=1):
@@ -114,3 +148,9 @@ class SwiftConnector(object):
         except Exception as e:
             LOG.exception('Connecting to Swift is failed!')
             raise e
+
+
+if __name__ == '__main__':
+    # Recreate database to cleanup env
+    mysql = MySQLConnector()
+    mysql.cleaup_database()
