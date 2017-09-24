@@ -55,7 +55,7 @@ class LANSyncDaemon(base.BaseDaemon):
         LOG.info(serf_command)
         subprocess.call(serf_command)
 
-        node = Server(username, ip, port, watch_dirs)
+        node = Server(username, ip, port, watch_dirs, self.mysql_connector)
         # Have to active before start detect valid host
         # to open port.
         node.activate()
@@ -78,8 +78,9 @@ class LANSyncDaemon(base.BaseDaemon):
             files = self.mysql_connector.get_files()
             # Check local change vs master change and decide to download it into local
             for _file in files:
-                filepath = "/".join(watch_dirs[0], _file[0])
+                filepath = "/".join([watch_dirs[0], _file[0]])
                 local_modified_time = os.path.getmtime(filepath)
                 if local_modified_time < _file[1]:
                     # File is out of dated, download it by SwiftConnector
+                    node.swift_connector.download(_file[0])
             time.sleep(10)

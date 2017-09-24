@@ -7,12 +7,16 @@ import platform
 import subprocess
 import threading
 import time
+import hashlib
+import shutil
 
 from serfclient.client import SerfClient
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
 from lan_sync_controller.config_loader import SETTINGS
+from lan_sync_controller.connector import MySQLConnector
+from lan_sync_controller.connector import SwiftConnector
 from lan_sync_controller.pysyncit.node import Node
 from lan_sync_controller.pysyncit.persistence import FilesPersistentSet
 from lan_sync_controller.constants import DIR_PATH
@@ -27,10 +31,12 @@ PIPE = subprocess.PIPE
 
 
 class Handler(FileSystemEventHandler):
-    def __init__(self, mfiles, ip):
+    def __init__(self, mfiles, ip, mysql_connector):
         self.mfiles = mfiles
         self.ip = ip
-        self.client = SerfClient()
+        self.serf_client = SerfClient()
+        self.swift_connector = SwiftConnector()
+        self.mysql_connector = mysql_connector
 
     def on_any_event(self, event):
         if event.is_directory:
@@ -40,21 +46,25 @@ class Handler(FileSystemEventHandler):
         elif event.event_type == 'created':
             filename = event.src_path
             timestamp = time.time()
-            self.client.event('created|{}|{}|{}'.format(
+            self.serf_client.event('created|{}|{}|{}'.format(
                 filename, timestamp, self.ip))
             LOG.info("Created file: %s", filename)
+            self.upload_file(filename)
+            LOG.info("Uploaded file to Cloud: %s", filename)
 
         elif event.event_type == 'modified':
             filename = event.src_path
             timestamp = time.time()
-            self.client.event('modified|{}|{}|{}'.format(
+            self.serf_client.event('modified|{}|{}|{}'.format(
                 filename, timestamp, self.ip))
             LOG.info("Modified file: %s", filename)
+            self.upload_file(filename)
+            LOG.info("Uploaded file to Cloud: %s", filename)
 
         elif event.event_type == 'deleted':
             filename = event.src_path
             timestamp = time.time()
-            self.client.event('deleted|{}|{}|{}'.format(
+            self.serf_client.event('deleted|{}|{}|{}'.format(
                 filename, timestamp, self.ip))
             try:
                 self.mfiles.remove(filename)
@@ -62,16 +72,29 @@ class Handler(FileSystemEventHandler):
                 pass
             LOG.info("Removed file: %s", filename)
 
+    def upload_file(self, filepath):
+        """ This function will be called in create and modified event."""
+        # In case, we are uploading file to server, then pass this
+        # In other case, we should update metadate to server and upload it to Swift
+        encode_name = ".{}".format(hashlib.md5(filepath).hexdigest())
+        if not os.path.isfile(encode_name):
+            last_modified = os.path.getmtime(filepath)
+            shutil.copy2(filepath, encode_name)
+            self.mysql_connector.insert_or_update(filepath, last_modified)
+            self.swift_connector.upload(encode_name)
+
 
 class Server(Node):
     """Server class"""
 
-    def __init__(self, username, ip, port, watch_dirs):
+    def __init__(self, username, ip, port, watch_dirs, mysql_connector):
         super(Server, self).__init__(username, ip, port, watch_dirs)
         # set() #set of modified files
         self.mfiles = FilesPersistentSet(
             pkl_filename='{}/node.pkl' .format(DIR_PATH))
-        self.client = SerfClient()
+        self.serf_client = SerfClient()
+        self.swift_connector = SwiftConnector()
+        self.mysql_connector = mysql_connector
 
     def event(self, filename, timestamp, event_type, serverip):
         if serverip != self.ip:
@@ -155,14 +178,14 @@ class Server(Node):
                 if mtime > self.mfiles.get_modified_timestamp():
                     LOG.debug(
                         "modified before client was running %s", file_path)
-                    self.client.event('modified|{}|{}|{}'.format(
+                    self.serf_client.event('modified|{}|{}|{}'.format(
                         filename, mtime, self.ip))
 
     def watch_files(self):
         """keep a watch on files present in sync directories"""
         ob = Observer()
         # watched events
-        ob.schedule(Handler(self.mfiles, self.ip), self.watch_dirs[0])
+        ob.schedule(Handler(self.mfiles, self.ip, self.mysql_connector), self.watch_dirs[0])
         ob.start()
         LOG.debug("watched dir %s", self.watch_dirs)
         try:

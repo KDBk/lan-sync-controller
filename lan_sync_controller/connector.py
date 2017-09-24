@@ -41,12 +41,11 @@ class MySQLConnector(object):
         drop_if_exist = "DROP TABLE IF EXISTS files;"
         create_new_one = """
             CREATE TABLE files (
-                id INT(6) AUTO_INCREMENT PRIMARY KEY
-                name TEXT NOT NULL,
-                size INT(30) NULL,
-                last_modified TIMESTAMP,
+                name TEXT PRIMARY KEY NOT NULL,
+                size INT(30),
+                last_modified DOUBLE NOT NULL,
                 version INT(2)
-            )
+            );
         """
         try:
             cursor = self.cursor()
@@ -88,6 +87,20 @@ class MySQLConnector(object):
             LOG.exception('Fail to execute query: %s', query)
             raise e
         return result
+
+    def insert_or_update(self, filename, last_modified):
+        try:
+            LOG.info('Create or update one row on with file name %s', filename)
+            # Hardcore table name as files
+            query = """
+                INSERT INTO files (name, last_modified)
+                VALUES ({}, {}) ON DUPLICATE KEY UPDATE last_modified = {};
+            """.format(filename, last_modified, last_modified)
+            cursor = self.cursor()
+            cursor.execute(query)
+        except Exception as e:
+            LOG.exception('Fail to execute query: %s', query)
+            raise e
 
     def insert_new_file(self, filename, filesize,
                         last_modified, version=1):
@@ -149,6 +162,15 @@ class SwiftConnector(object):
             LOG.exception('Connecting to Swift is failed!')
             raise e
 
+    def upload(self, filepath):
+        # Fixed container name
+        LOG.info("Update file {} to Cloud server". format(filepath))
+        self.connection.upload("lansync", [filepath])
+
+    def download(self, filepath):
+        # Fixed container name
+        LOG.info("Download file {} from Cloud server". format(filepath))
+        self.connection.upload("lansync", [filepath])
 
 if __name__ == '__main__':
     # Recreate database to cleanup env
