@@ -1,0 +1,24 @@
+{
+    "host": "192.168.122.32",
+    "port": 22,
+    "username": "daidv",
+    "password": "1",
+    "protocol": "sftp",
+    "privateKeyPath": null,
+    "passphrase": null,
+    "passive": false,
+    "remotePath": "/home/daidv/lan_sync_controller",
+    "uploadOnSave": false,
+    "syncMode": "update",
+    "watcher": {
+        "files": false,
+        "autoUpload": true,
+        "autoDelete": true
+    },
+    "ignore": [
+        "**/.vscode",
+        "**/.git",
+        "**/.DS_Store",
+        "**/.sftpConfig.json"
+    ]
+}

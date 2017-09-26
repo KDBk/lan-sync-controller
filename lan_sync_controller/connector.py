@@ -76,13 +76,16 @@ class MySQLConnector(object):
             raise e
 
     def get_files(self):
+        """
+        return format: [{u'last_modified': 1234.566, u'name': u'abc.txt'},...]
+        """
         try:
             LOG.info('Get all of files and their timlast_modifiede from server')
             # Hardcore table name as files
             query = "select name, last_modified from files"
             cursor = self.cursor()
             cursor.execute(query)
-            result = self.fetchall()
+            result = cursor.fetchall()
         except Exception as e:
             LOG.exception('Fail to execute query: %s', query)
             raise e
@@ -94,7 +97,7 @@ class MySQLConnector(object):
             # Hardcore table name as files
             query = """
                 INSERT INTO files (name, last_modified)
-                VALUES ({}, {}) ON DUPLICATE KEY UPDATE last_modified = {};
+                VALUES ('{}', {}) ON DUPLICATE KEY UPDATE last_modified = {};
             """.format(filename, last_modified, last_modified)
             cursor = self.cursor()
             cursor.execute(query)
