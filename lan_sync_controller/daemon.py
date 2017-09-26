@@ -26,7 +26,7 @@ class LANSyncDaemon(base.BaseDaemon):
     """
 
     def __init__(self, pidfile):
-        super(LANSyncDaemon, self).__init__()
+        super(LANSyncDaemon, self).__init__(pidfile)
         self.mysql_connector = MySQLConnector()
 
     def stop(self):
