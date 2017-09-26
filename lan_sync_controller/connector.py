@@ -18,9 +18,9 @@ class MySQLConnector(object):
     """
 
     def __init__(self):
-        self.connection = _init_mysql_connection()
+        self.connection = self._init_mysql_connection()
 
-    def _init_mysql_connection():
+    def _init_mysql_connection(self):
         try:
             LOG.info('Connecting to MySQL...')
             connection = pymysql.connect(
@@ -41,7 +41,7 @@ class MySQLConnector(object):
         drop_if_exist = "DROP TABLE IF EXISTS files;"
         create_new_one = """
             CREATE TABLE files (
-                name TEXT PRIMARY KEY NOT NULL,
+                name VARCHAR(200) PRIMARY KEY NOT NULL,
                 size INT(30),
                 last_modified DOUBLE NOT NULL,
                 version INT(2)
