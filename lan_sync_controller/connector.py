@@ -153,7 +153,7 @@ class SwiftConnector(object):
         auth = v3.Password(
             auth_url=SETTINGS['swift-os_auth_url'],
             user_domain_name=SETTINGS['swift-os_user_domain_name'],
-            password=SETTINGS['swift-password'],
+            password=SETTINGS['swift-os_password'],
             project_domain_name=SETTINGS['swift-os_project_domain_name'],
             project_name=SETTINGS['swift-os_project_name']
         )
