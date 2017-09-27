@@ -31,10 +31,10 @@ PIPE = subprocess.PIPE
 
 
 class Handler(FileSystemEventHandler):
-    def __init__(self, mfiles, ip, mysql_connector):
+    def __init__(self, mfiles, ip, mysql_connector, serf_client):
         self.mfiles = mfiles
         self.ip = ip
-        self.serf_client = SerfClient()
+        self.serf_client = serf_client or SerfClient(host=str(ip))
         self.swift_connector = SwiftConnector()
         self.mysql_connector = mysql_connector
 
@@ -92,7 +92,7 @@ class Server(Node):
         # set() #set of modified files
         self.mfiles = FilesPersistentSet(
             pkl_filename='{}/node.pkl' .format(DIR_PATH))
-        self.serf_client = SerfClient()
+        self.serf_client = SerfClient(host=str('localhost'))
         self.swift_connector = SwiftConnector()
         self.mysql_connector = mysql_connector
 
@@ -185,7 +185,7 @@ class Server(Node):
         """keep a watch on files present in sync directories"""
         ob = Observer()
         # watched events
-        ob.schedule(Handler(self.mfiles, self.ip, self.mysql_connector), self.watch_dirs[0])
+        ob.schedule(Handler(self.mfiles, self.ip, self.mysql_connector, self.serf_client), self.watch_dirs[0])
         ob.start()
         LOG.debug("watched dir %s", self.watch_dirs)
         try:
