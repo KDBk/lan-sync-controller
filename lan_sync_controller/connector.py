@@ -146,7 +146,7 @@ class MySQLConnector(object):
 class SwiftConnector(object):
 
     def __init__(self):
-        self.connection = _init_swift_client(self)
+        self.connection = self._init_swift_client()
     
     def _init_swift_client(self):
         # Keystone Authentication
