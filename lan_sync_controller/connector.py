@@ -37,7 +37,7 @@ class MySQLConnector(object):
             LOG.exception('Connecting to database failed: %s', e)
             raise e
 
-    def cleaup_database(self):
+    def cleanup_database(self):
         drop_if_exist = "DROP TABLE IF EXISTS files;"
         create_new_one = """
             CREATE TABLE files (
@@ -178,4 +178,4 @@ class SwiftConnector(object):
 if __name__ == '__main__':
     # Recreate database to cleanup env
     mysql = MySQLConnector()
-    mysql.cleaup_database()
+    mysql.cleanup_database()
