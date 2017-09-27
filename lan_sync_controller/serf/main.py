@@ -44,7 +44,7 @@ def safe_rpc(fn):
 @safe_rpc
 def event(port, filename, timestamp, event_type, serverip):
     if serverip not in get_local_addresses():
-        url = 'http://%s:%s/' % ('localhost', port)
+        url = 'http://%s:%s/' % ('0.0.0.0', port)
         rpc_connect = xmlrpclib.ServerProxy(url, allow_none=True)
         return rpc_connect.event(filename, timestamp, event_type, serverip)
     else:

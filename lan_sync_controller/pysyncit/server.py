@@ -92,7 +92,7 @@ class Server(Node):
         # set() #set of modified files
         self.mfiles = FilesPersistentSet(
             pkl_filename='{}/node.pkl' .format(DIR_PATH))
-        self.serf_client = SerfClient(host=str('localhost'))
+        self.serf_client = SerfClient(host=str(ip))
         self.swift_connector = SwiftConnector()
         self.mysql_connector = mysql_connector
 

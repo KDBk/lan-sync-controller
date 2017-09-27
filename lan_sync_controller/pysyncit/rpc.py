@@ -36,7 +36,7 @@ def req_pull_file(dest_ip, dest_port, filename):
 @safe_rpc
 def event(port, filename, timestamp, event_type, serverip):
     rpc_connect = xmlrpclib.ServerProxy(
-        "http://%s:%s/" % ('localhost', port), allow_none=True)
+        "http://%s:%s/" % ('0.0.0.0', port), allow_none=True)
     return rpc_connect.event(filename, timestamp, event_type, serverip)
 
 
