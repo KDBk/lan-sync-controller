@@ -78,7 +78,8 @@ class LANSyncDaemon(base.BaseDaemon):
             files = self.mysql_connector.get_files()
             # Check local change vs master change and decide to download it into local
             for _file in files:
-                filepath = "/".join([watch_dirs[0], _file['name']])
+                name = _file['name'].split("/").pop()
+                filepath = "/".join([watch_dirs[0], name])
                 local_modified_time = os.path.getmtime(filepath)
                 if local_modified_time < _file['last_modified']:
                     # File is out of dated, download it by SwiftConnector
