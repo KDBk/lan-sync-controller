@@ -34,7 +34,7 @@ class Handler(FileSystemEventHandler):
     def __init__(self, mfiles, ip, mysql_connector, serf_client):
         self.mfiles = mfiles
         self.ip = ip
-        self.serf_client = serf_client or SerfClient(host=str(ip))
+        self.serf_client = serf_client or SerfClient()
         self.swift_connector = SwiftConnector()
         self.mysql_connector = mysql_connector
 
@@ -92,7 +92,7 @@ class Server(Node):
         # set() #set of modified files
         self.mfiles = FilesPersistentSet(
             pkl_filename='{}/node.pkl' .format(DIR_PATH))
-        self.serf_client = SerfClient(host=str(ip))
+        self.serf_client = SerfClient()
         self.swift_connector = SwiftConnector()
         self.mysql_connector = mysql_connector
 
