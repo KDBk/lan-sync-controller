@@ -175,7 +175,8 @@ class SwiftConnector(object):
     def upload(self, file_name):
         # Fixed container name
         LOG.info("Upload file {} to Cloud server". format(file_name))
-        with open(file_name, 'r') as content:
+        dir_path = SETTINGS['default-syncdir'].strip('/')
+        with open(dir_path + '/' + file_name, 'r') as content:
             self.connection.put_object('lan_sync', 'filepath',
                                        contents=content)
         LOG.info('Upload %s to Swift successfully!', file_name)
@@ -186,7 +187,7 @@ class SwiftConnector(object):
         resp_headers, obj_contents = self.connection.get_object('lansync',
                                                                 file_name)
         dir_path = SETTINGS['default-syncdir'].strip('/')
-        with open(dir_path + +'/' + file_name') as content:
+        with open(dir_path + '/' + file_name, 'w') as content:
             content.write(obj_contents)
 
 
