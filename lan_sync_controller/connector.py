@@ -5,6 +5,7 @@ import pymysql
 from keystoneauth1.identity import v3
 from keystoneauth1 import session
 from swiftclient.client import Connection
+from swiftclient.service import SwiftService
 
 from lan_sync_controller.config_loader import SETTINGS
 
@@ -153,7 +154,7 @@ class SwiftConnector(object):
 
     def __init__(self):
         self.connection = self._init_swift_client()
-    
+
     def _init_swift_client(self):
         # Keystone Authentication
         auth = v3.Password(
@@ -166,7 +167,17 @@ class SwiftConnector(object):
         sess = session.Session(auth=auth)
         try:
             # Use version 2
-            return Connection('2', session=sess)
+            # return Connection('2', session=sess)
+            options = {
+                'os_username': SETTINGS['swift-os_username'],
+                'os_user_domain_name': SETTINGS['swift-os_user_domain_name'],
+                'os_password': SETTINGS['swift-os_password'],
+                'os_project_name': SETTINGS['swift-os_project_name'],
+                'os_project_domain_name': SETTINGS['swift-os_project_domain_name'],
+                'os_auth_url': SETTINGS['swift-os_auth_url'],
+            }
+
+            return SwiftService(options=options)
         except Exception as e:
             LOG.exception('Connecting to Swift is failed!')
             raise e
@@ -180,6 +191,7 @@ class SwiftConnector(object):
         # Fixed container name
         LOG.info("Download file {} from Cloud server". format(filepath))
         self.connection.upload("lansync", [filepath])
+
 
 if __name__ == '__main__':
     # Recreate database to cleanup env
