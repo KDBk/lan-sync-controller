@@ -78,6 +78,7 @@ class LANSyncDaemon(base.BaseDaemon):
             files = self.mysql_connector.get_files()
             # Check local change vs master change and decide to download it into local
             for _file in files:
+                name = _file['name'].split("/").pop()
                 filepath = "/".join([watch_dirs[0], _file['name']])
                 local_modified_time = os.path.getmtime(filepath)
                 if local_modified_time < _file['last_modified']:
