@@ -157,6 +157,7 @@ class SwiftConnector(object):
     def _init_swift_client(self):
         # Keystone Authentication
         auth = v3.Password(
+            username=SETTINGS['swift-os_username'],
             auth_url=SETTINGS['swift-os_auth_url'],
             user_domain_name=SETTINGS['swift-os_user_domain_name'],
             password=SETTINGS['swift-os_password'],
