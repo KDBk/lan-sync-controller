@@ -53,6 +53,7 @@ class MySQLConnector(object):
             cursor.execute(drop_if_exist)
             LOG.info('Recreate table FILES')
             cursor.execute(create_new_one)
+            cursor.close()
         except Exception as e:
             LOG.exception('Fail to cleanup database!')
             raise e
@@ -71,6 +72,7 @@ class MySQLConnector(object):
             cursor.execute(query)
             result = self.fetchone()[0]
             LOG.info('Get file with name %s successfully!', filename)
+            cursor.close()
         except Exception as e:
             LOG.exception('Fail to execute query: %s', query)
             raise e
@@ -86,6 +88,7 @@ class MySQLConnector(object):
             cursor = self.cursor()
             cursor.execute(query)
             result = cursor.fetchall()
+            cursor.close()
         except Exception as e:
             LOG.exception('Fail to execute query: %s', query)
             raise e
@@ -101,6 +104,7 @@ class MySQLConnector(object):
             """.format(filename, last_modified, last_modified)
             cursor = self.cursor()
             cursor.execute(query)
+            cursor.close()
         except Exception as e:
             LOG.exception('Fail to execute query: %s', query)
             raise e
@@ -118,6 +122,7 @@ class MySQLConnector(object):
             cursor.execute(query)
             LOG.info('Insert file with name %s successfully!', filename)
             self.commit()
+            cursor.close()
         except Exception as e:
             LOG.exception('Fail to execute query: %s', query)
             raise e
@@ -138,6 +143,7 @@ class MySQLConnector(object):
             cursor.execute(query)
             LOG.info('Update file with name %s successfully!', filename)
             self.commit()
+            cursor.close()
         except Exception as e:
             LOG.exception('Fail to execute query: %s', query)
             raise e
