@@ -153,7 +153,7 @@ class SwiftConnector(object):
 
     def __init__(self):
         self.connection = self._init_swift_client()
-    
+
     def _init_swift_client(self):
         # Keystone Authentication
         auth = v3.Password(
@@ -172,15 +172,23 @@ class SwiftConnector(object):
             LOG.exception('Connecting to Swift is failed!')
             raise e
 
-    def upload(self, filepath):
+    def upload(self, file_name):
         # Fixed container name
-        LOG.info("Update file {} to Cloud server". format(filepath))
-        self.connection.upload("lansync", [filepath])
+        LOG.info("Upload file {} to Cloud server". format(file_name))
+        with open(file_name, 'r') as content:
+            self.connection.put_object('lan_sync', 'filepath',
+                                       contents=content)
+        LOG.info('Upload %s to Swift successfully!', file_name)
 
-    def download(self, filepath):
+    def download(self, file_name):
         # Fixed container name
-        LOG.info("Download file {} from Cloud server". format(filepath))
-        self.connection.upload("lansync", [filepath])
+        LOG.info("Download file {} from Cloud server". format(file_name))
+        resp_headers, obj_contents = self.connection.get_object('lansync',
+                                                                file_name)
+        dir_path = SETTINGS['default-syncdir'].strip('/')
+        with open(dir_path + +'/' + file_name') as content:
+            content.write(obj_contents)
+
 
 if __name__ == '__main__':
     # Recreate database to cleanup env
