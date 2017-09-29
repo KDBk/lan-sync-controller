@@ -166,8 +166,7 @@ class SwiftConnector(object):
         )
         sess = session.Session(auth=auth)
         try:
-            # Use version 2
-            return Connection('2', session=sess)
+            return Connection(session=sess)
         except Exception as e:
             LOG.exception('Connecting to Swift is failed!')
             raise e
@@ -177,7 +176,7 @@ class SwiftConnector(object):
         LOG.info("Upload file {} to Cloud server". format(file_name))
         dir_path = SETTINGS['default-syncdir'].rstrip('/')
         with open(dir_path + '/' + file_name, 'r') as content:
-            self.connection.put_object('lan_sync', file_name,
+            self.connection.put_object('lansync', file_name,
                                        contents=content)
         LOG.info('Upload %s to Swift successfully!', file_name)
 
