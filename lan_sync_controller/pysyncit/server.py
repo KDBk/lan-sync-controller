@@ -76,13 +76,27 @@ class Handler(FileSystemEventHandler):
         """ This function will be called in create and modified event."""
         # In case, we are uploading file to server, then pass this
         # In other case, we should update metadate to server and upload it to Swift
-        encode_name = ".{}".format(hashlib.md5(filepath).hexdigest())
-        if not os.path.isfile(encode_name):
-            last_modified = os.path.getmtime(filepath)
-            shutil.copy2(filepath, encode_name)
-            file_name = filepath.split("/").pop()
-            self.mysql_connector.insert_or_update(filepath, last_modified)
-            self.swift_connector.upload(encode_name, file_name)
+        # encode_name = ".{}".format(hashlib.md5(filepath).hexdigest())
+        # NOTE(kiennt): Temporary comment out, wrong logic
+        # if not os.path.isfile(encode_name):
+        #     last_modified = os.path.getmtime(filepath)
+        #     shutil.copy2(filepath, encode_name)
+        #     file_name = filepath.split("/").pop()
+        #     self.mysql_connector.insert_or_update(filepath, last_modified)
+        #     self.swift_connector.upload(encode_name, file_name)
+
+        # rstrip to make sure filepath doesn't end with '/'
+        file_name = filepath.rstrip('/').split('/').pop()
+        sync_dir = SETTINGS['default-syncdir'].rstrip('/')
+        while True:
+            encode_name = ".{}".format(hashlib.md5(file_name).hexdigest())
+            encode_path = sync_dir + '/' + encode_name
+            if not os.path.isfile(encode_path):
+                last_modified = os.path.getmtime(filepath)
+                shutil.copy2(filepath, encode_path)
+                self.mysql_connector.insert_or_update(filepath, last_modified)
+                self.swift_connector.upload(encode_name, file_name)
+                break
 
 
 class Server(Node):
@@ -186,7 +200,8 @@ class Server(Node):
         """keep a watch on files present in sync directories"""
         ob = Observer()
         # watched events
-        ob.schedule(Handler(self.mfiles, self.ip, self.mysql_connector, self.serf_client), self.watch_dirs[0])
+        ob.schedule(Handler(self.mfiles, self.ip, self.mysql_connector,
+                            self.serf_client), self.watch_dirs[0])
         ob.start()
         LOG.debug("watched dir %s", self.watch_dirs)
         try:

@@ -171,11 +171,10 @@ class SwiftConnector(object):
             LOG.exception('Connecting to Swift is failed!')
             raise e
 
-    def upload(self, encode_name, file_name):
+    def upload(self, encode_path, file_name):
         # Fixed container name
         LOG.info("Upload file {} to Cloud server". format(file_name))
-        dir_path = SETTINGS['default-syncdir'].rstrip('/')
-        with open(dir_path + '/' + encode_name, 'r') as content:
+        with open(encode_path, 'r') as content:
             self.connection.put_object('lansync', file_name,
                                        contents=content)
         LOG.info('Upload %s to Swift successfully!', file_name)
