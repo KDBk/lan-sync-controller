@@ -83,5 +83,8 @@ class LANSyncDaemon(base.BaseDaemon):
                 local_modified_time = os.path.getmtime(filepath)
                 if local_modified_time < _file['last_modified']:
                     # File is out of dated, download it by SwiftConnector
-                    node.swift_connector.download(_file['name'])
+                    # FUCK. Only get filename not filepath
+                    # _file['name'] = filepath, fuck logic
+                    file_name = _file['name'].rstrip('/').split('/').pop()
+                    node.swift_connector.download(file_name)
             time.sleep(10)
