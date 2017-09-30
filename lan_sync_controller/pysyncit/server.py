@@ -95,7 +95,7 @@ class Handler(FileSystemEventHandler):
                 last_modified = os.path.getmtime(filepath)
                 shutil.copy2(filepath, encode_path)
                 self.mysql_connector.insert_or_update(filepath, last_modified)
-                self.swift_connector.upload(encode_name, file_name)
+                self.swift_connector.upload(encode_path, file_name)
                 break
 
 
