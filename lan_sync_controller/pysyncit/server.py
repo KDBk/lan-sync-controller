@@ -117,9 +117,6 @@ class Server(Node):
 
     def pull_file(self, filename, dest_file, passwd, dest_uname, dest_ip):
         """Pull file 'filename' to the destination"""
-        command = "{} -q -p -l {} -pw {} {}@{}:{} {}".format(
-            PSCP_COMMAND[ENV], self.username, passwd,
-            dest_uname, dest_ip, dest_file, filename).split()
         # MUST COPY SSH ID_RSA PUB TO ANOTHER HOST (FUCK)
         ssh_private_key = '/home/%s/.ssh/id_rsa' % self.username
         rsync_path = DIR_PATH + '/run_rsync.sh'
