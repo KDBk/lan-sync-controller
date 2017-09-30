@@ -80,8 +80,9 @@ class Handler(FileSystemEventHandler):
         if not os.path.isfile(encode_name):
             last_modified = os.path.getmtime(filepath)
             shutil.copy2(filepath, encode_name)
+            file_name = filepath.split("/").pop()
             self.mysql_connector.insert_or_update(filepath, last_modified)
-            self.swift_connector.upload(encode_name)
+            self.swift_connector.upload(encode_name, file_name)
 
 
 class Server(Node):
