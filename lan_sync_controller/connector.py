@@ -30,7 +30,8 @@ class MySQLConnector(object):
                 password=SETTINGS['mysql-password'],
                 db=SETTINGS['mysql-db_name'],
                 charset='utf8mb4',
-                cursorclass=pymysql.cursors.DictCursor)
+                cursorclass=pymysql.cursors.DictCursor,
+		autocommit=True)
             LOG.info('Connected to MySQL!')
             return connection
         except Exception as e:
