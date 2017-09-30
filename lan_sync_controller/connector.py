@@ -53,6 +53,7 @@ class MySQLConnector(object):
             cursor.execute(drop_if_exist)
             LOG.info('Recreate table FILES')
             cursor.execute(create_new_one)
+            LOG.info('Execute query successfully: %s', query)
             cursor.close()
         except Exception as e:
             LOG.exception('Fail to cleanup database!')
@@ -88,6 +89,7 @@ class MySQLConnector(object):
             cursor = self.cursor()
             cursor.execute(query)
             result = cursor.fetchall()
+            LOG.info('Execute query successfully: %s', query)
             cursor.close()
         except Exception as e:
             LOG.exception('Fail to execute query: %s', query)
@@ -104,6 +106,7 @@ class MySQLConnector(object):
             """.format(filename, last_modified, last_modified)
             cursor = self.cursor()
             cursor.execute(query)
+            LOG.info('Execute query successfully: %s', query)
             cursor.close()
         except Exception as e:
             LOG.exception('Fail to execute query: %s', query)
