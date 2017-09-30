@@ -133,7 +133,9 @@ class Server(Node):
         LOG.info("Communicate log: {} {}".format(output, error))
 
     def req_pull_file(self, filename):
-        my_file = "{}{}".format(self.watch_dirs[0], filename)
+        # NOTE(kiennt): Always remove the last '/' character. Can do a check
+        #               but it doesn't worth.
+        my_file = "{}/{}".format(self.watch_dirs[0].rstrip('/'), filename)
         server_filename = my_file
         LOG.debug("server filename %s returned for file %s",
                   server_filename, filename)
