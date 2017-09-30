@@ -53,7 +53,7 @@ class MySQLConnector(object):
             cursor.execute(drop_if_exist)
             LOG.info('Recreate table FILES')
             cursor.execute(create_new_one)
-            LOG.info('Execute query successfully: %s', query)
+            LOG.info('Execute query successfully: %s', create_new_one)
             cursor.close()
         except Exception as e:
             LOG.exception('Fail to cleanup database!')
