@@ -96,6 +96,7 @@ class Handler(FileSystemEventHandler):
                 shutil.copy2(filepath, encode_path)
                 self.mysql_connector.insert_or_update(filepath, last_modified)
                 self.swift_connector.upload(encode_path, file_name)
+                os.remove(encode_path)
                 break
 
 
