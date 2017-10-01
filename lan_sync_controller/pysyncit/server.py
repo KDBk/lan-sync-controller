@@ -94,6 +94,10 @@ class Handler(FileSystemEventHandler):
             last_modified = os.path.getmtime(filepath)
             shutil.copy2(filepath, encode_path)
             try:
+                f = self.mysql_connector.get_file_by_name(filepath)
+                if f:
+                    if last_modified <= f['last_modified']:
+                        return
                 self.mysql_connector.insert_or_update(filepath, last_modified)
                 self.swift_connector.upload(encode_path, file_name)
             except Exception:

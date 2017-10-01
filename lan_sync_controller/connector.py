@@ -64,25 +64,25 @@ class MySQLConnector(object):
     def __getattr__(self, key):
         return getattr(self.connection, key)
 
-    def get_file_by_name(self, filename):
+    def get_file_by_name(self, filepath):
         try:
-            LOG.info('Get file with name %s', filename)
+            LOG.info('Get file with name %s', filepath)
             # Hardcore table name as files
             query = """select * from files 
-                    where name=%s
-                    """ % filename
+                    where name='%s'
+                    """ % filepath
             cursor = self.cursor()
             cursor.execute(query)
-            LOG.info('Get file with name %s successfully!', filename)
+            LOG.info('Get file with name %s successfully!', filepath)
             if cursor.fetchone():
                 result = cursor.fetchone()[0]
             else:
                 result = None
             cursor.close()
-            return None
+            return result
         except Exception as e:
             LOG.exception('Fail to execute query: %s', query)
-            raise e
+            return None
 
     def get_files(self):
         """
