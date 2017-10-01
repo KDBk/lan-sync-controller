@@ -146,6 +146,7 @@ class Server(Node):
         while True:
             try:
                 time.sleep(10)
+                LOG.info("Syncing files from other nodes")
                 # TODO(daidv): Do someting like summary list mfiles, compare and return list action
                 for filedata in mfiles.list():
                     filename = filedata.name
