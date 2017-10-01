@@ -1,4 +1,5 @@
 import logging
+import os
 import time
 
 import pymysql
@@ -31,7 +32,7 @@ class MySQLConnector(object):
                 db=SETTINGS['mysql-db_name'],
                 charset='utf8mb4',
                 cursorclass=pymysql.cursors.DictCursor,
-		autocommit=True)
+                autocommit=True)
             LOG.info('Connected to MySQL!')
             return connection
         except Exception as e:
@@ -193,6 +194,12 @@ class SwiftConnector(object):
         dir_path = SETTINGS['default-syncdir'].rstrip('/')
         with open(dir_path + '/' + file_name, 'w') as content:
             content.write(obj_contents)
+        # resp_headers['last-modified'] -> string type
+        # For e.x: Sun, 01 Oct 2017 02:58:04 GMT
+        # timestamp -> unix epoch type
+        timestamp = resp_headers['x-timestamp']
+        # Update timestamp!!!! Override!
+        os.utime(dir_path + '/' + file_name, (timestamp, timestamp))
 
 
 if __name__ == '__main__':
