@@ -139,7 +139,10 @@ class Server(Node):
         server_filename = my_file
         LOG.debug("server filename %s returned for file %s",
                   server_filename, filename)
-        return (self.username, server_filename)
+        if os.path.isfile(server_filename):
+            return (self.username, server_filename)
+        else:
+            return None
 
     def sync_files_to_server(self):
         """Sync all the files present in the mfiles set and push this set"""
