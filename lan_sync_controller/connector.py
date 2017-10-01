@@ -129,7 +129,6 @@ class MySQLConnector(object):
             cursor = self.cursor()
             cursor.execute(query)
             LOG.info('Insert file with name %s successfully!', filename)
-            self.commit()
             cursor.close()
         except Exception as e:
             LOG.exception('Fail to execute query: %s', query)
@@ -150,7 +149,6 @@ class MySQLConnector(object):
             cursor = self.cursor()
             cursor.execute(query)
             LOG.info('Update file with name %s successfully!', filename)
-            self.commit()
             cursor.close()
         except Exception as e:
             LOG.exception('Fail to execute query: %s', query)
