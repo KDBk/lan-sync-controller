@@ -60,7 +60,7 @@ class LANSyncDaemon(base.BaseDaemon):
         # to open port.
         node.activate()
         prhandler = ProcessHandler(SETTINGS['default-syncapp'])
-        exe = prhandler.get_executable_file()
+        # exe = prhandler.get_executable_file()
 
         while True:
             # List valid hosts
