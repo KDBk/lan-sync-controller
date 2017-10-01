@@ -88,16 +88,18 @@ class Handler(FileSystemEventHandler):
         # rstrip to make sure filepath doesn't end with '/'
         file_name = filepath.rstrip('/').split('/').pop()
         sync_dir = SETTINGS['default-syncdir'].rstrip('/')
-        while True:
-            encode_name = ".{}".format(hashlib.md5(file_name).hexdigest())
-            encode_path = sync_dir + '/' + encode_name
-            if not os.path.isfile(encode_path):
-                last_modified = os.path.getmtime(filepath)
-                shutil.copy2(filepath, encode_path)
+        encode_name = ".{}".format(hashlib.md5(file_name).hexdigest())
+        encode_path = sync_dir + '/' + encode_name
+        if os.path.isfile(filepath) and not os.path.isfile(encode_path):
+            last_modified = os.path.getmtime(filepath)
+            shutil.copy2(filepath, encode_path)
+            try:
                 self.mysql_connector.insert_or_update(filepath, last_modified)
                 self.swift_connector.upload(encode_path, file_name)
+            except Exception:
+                pass
+            finally:
                 os.remove(encode_path)
-                break
 
 
 class Server(Node):
