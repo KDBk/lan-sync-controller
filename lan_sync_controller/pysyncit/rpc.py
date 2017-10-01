@@ -12,9 +12,6 @@ def safe_rpc(fn):
     def safe_fn(*args):
         try:
             result = fn(*args)
-            if result is None:
-                result = "success"
-
             return result
         except socket.error as e:
             if e.errno == errno.ECONNREFUSED or e.errno == errno.EHOSTUNREACH:
