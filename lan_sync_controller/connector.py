@@ -94,7 +94,7 @@ class MySQLConnector(object):
             cursor.close()
         except Exception as e:
             LOG.exception('Fail to execute query: %s', query)
-            raise e
+            return []
         return result
 
     def insert_or_update(self, filename, last_modified):
@@ -111,7 +111,7 @@ class MySQLConnector(object):
             cursor.close()
         except Exception as e:
             LOG.exception('Fail to execute query: %s', query)
-            raise e
+            pass
 
     def insert_new_file(self, filename, filesize,
                         last_modified, version=1):
