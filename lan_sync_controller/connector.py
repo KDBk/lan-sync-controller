@@ -72,9 +72,13 @@ class MySQLConnector(object):
                     """ % filename
             cursor = self.cursor()
             cursor.execute(query)
-            result = self.fetchone()[0]
             LOG.info('Get file with name %s successfully!', filename)
+            if cursor.fetchone():
+                result = cursor.fetchone()[0]
+            else:
+                result = None
             cursor.close()
+            return None
         except Exception as e:
             LOG.exception('Fail to execute query: %s', query)
             raise e
